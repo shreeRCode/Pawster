@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram-clone-Login</title>
+     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <div class="logo-section">
+                <h1 class="logo">Pawster</h1>
+            </div>
+            <!--Login form-->
+            <form class="auth-form" id="loginForm">
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="email" required>
+                </div>
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="auth-btn">Login</button>
+            </form>
+            <!--Divider-->
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            <!-- <div class="alt-login">
+                <a href="#" class="facebook-login">
+                    <span>Log in with facebook</span>
+                </a>
+            </div> -->
+            <div class="alt-login">
+            <button type="button" class="google-sign-in-button" onclick="signInWithGoogle()">
+  <img src="images/Google.jpg" alt="Google Logo" style="width:20px; vertical-align:middle; margin-right: 8px;">Continue with Google
+</button>
+          </div>
+            <!--Forgot Password-->
+            <div class="forgot-password">
+                <a href="forgot.html">Forgot Password?</a>
+            </div>
+
+        </div>
+        <!--sign Up Link-->
+        <div class="auth-box signup-link">
+            <p>Don't have an account?<a href="register.html">Sign up</a></p>
+        </div>
+    </div>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Clone-Profile</title>
+     <script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!--Navigation header-->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <h2>Pawster</h2>
+            </div>
+            <div class="nav-search">
+                <input type="text" placeholder="Search" class="search-input">
+            </div>
+            <div class="nav-icons">
+                <a href="feed.html" class="nav-icon">🏠</a>
+                <a href="#" class="nav-icon">💬</a>
+                <a href="#" class="nav-icon">❤️</a>
+                <a href="profile.html" class="nav-icon active">👤</a>
+            </div>
+        </div>
+    </header>
+    <!--Profile content-->
+    <main class="profile-main">
+        <div class="profile-container">
+            <!--profile Header-->
+            <div class="profile-header">
+                <div class="profile-image-section">
+                    <img src="images/default-avatar.png" alt="profile" class="profile-image">
+
+                </div>
+                <div class="profile-info-section">
+                    <div class="profile-title">
+                        <h1 class="profile-username">username</h1>
+                        <button class="edit-profile-btn">Edit profile</button>
+                        <button class="profile-settings">⚙️</button>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="stat">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">posts</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">followers</span>
+                        </div>
+                           <div class="stat">
+                            <span class="stat-number">0</span>
+                            <span class="stat-label">following</span>
+                        </div>
+                    </div>
+                    <div class="profile-bio">
+                        <span class="bio-name">Your Name</span>
+                        <p class="bio-text">Your bio goes here...</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!--Profile Navigation-->
+            <div class="profile-nav">
+                <button class="profile-nav-btn.active">
+                    <span>📷</span>
+                    <span>POSTS</span>
+                </button>
+                 <button class="profile-nav-btn">
+                    <span>📺</span>
+                    <span>REELS</span>
+                </button>
+                  <button class="profile-nav-btn">
+                    <span>🏷️</span>
+                    <span>TAGGED</span>
+                </button>
+            </div>
+            <!--Posts Grid-->
+            <div class="posts-grid" id="postsGrid">
+                <!--posts will be dynamically added here-->
+                
+                <div class="no-posts">
+                    <div class="no-posts-icon">📷</div>
+                    <h2>No posts yet</h2>
+                </div>
+            </div>
+        </div>
+    </main>
+    <script type="module" src="js/profile.js"></script>
+    
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Clone-SignUp</title>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-box">
+            <!--Logo Section-->
+            <div class="logo-section">
+                <h1 class="logo">Pawster</h1>
+                <p class="signup-text">Sign up to see photos and videos from your friends.</p>
+            </div>
+            <!--Facebook Signup-->
+            <!-- <div class="alt-login">
+                <a href="#" class="facebook-login">
+                    <span>Continue with Facebook</span>
+                </a>
+            </div> -->
+          <div class="alt-login">
+            <button type="button" class="google-sign-in-button" onclick="signInWithGoogle()">
+  <img src="images/Google.jpg" alt="Google Logo" style="width:20px; vertical-align:middle; margin-right: 8px;">Continue with Google
+</button>
+          </div>
+            <!--Divider-->
+            <div class="divider">
+                <span>OR</span>
+            </div>
+            <!--Sign Up form-->
+            <form class="auth-form" id="signupForm">
+                <div class="input-group">
+                    <input type="email" id="email" placeholder="Email" required>
+                </div>
+                 <div class="input-group">
+                    <input type="text" id="fullname" placeholder="Full Name" required>
+                </div>
+                 <div class="input-group">
+                    <input type="text" id="username" placeholder="Username" required>
+                </div>
+                 <div class="input-group">
+                    <input type="password" id="password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="auth-btn">Sign up</button>
+            </form>
+            <!--Terms-->
+            <div class="terms">
+                <p>By signing up, you agree to our Terms, Data Policy and Cookies Policy.</p>
+            </div>
+
+        </div>
+        <!--Login Link-->
+        <div class="auth-box login-link">
+            <p>Have an account? <a href="index.html">Login</a></p>
+        </div>
+    </div>
+     <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    
+</body>
+</html>
