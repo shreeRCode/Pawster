@@ -715,6 +715,46 @@ body {
 .close-btn:hover {
   color: #000;
 }
+.add-comment-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  border-top: 1px solid #dbdbdb;
+  margin-top: 10px;
+}
+
+.comment-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 8px;
+  font-size: 14px;
+  background: transparent;
+}
+
+.comment-input::placeholder {
+  color: #8e8e8e;
+}
+
+.comment-submit {
+  background: none;
+  border: none;
+  color: #0095f6;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.comment-submit:hover {
+  color: #00376b;
+}
+
+.comment-submit:disabled {
+  color: #b3dffc;
+  cursor: not-allowed;
+}
 
 /*Responsive design*/
 @media (max-width: 768px) {
