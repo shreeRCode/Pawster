@@ -3,19 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Instagram Clone-Profile</title>
-    <script
-      type="module"
-      src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
-    ></script>
-    <script
-      type="module"
-      src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
-    ></script>
+    <title>Pawster - Profile</title>
+
+    <!-- Firebase compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+
+    <!-- CSS -->
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <!--Navigation header-->
+    <!-- Navigation Header -->
     <header class="navbar">
       <div class="nav-container">
         <div class="nav-logo">
@@ -32,10 +32,11 @@
         </div>
       </div>
     </header>
-    <!--Profile content-->
+
+    <!-- Profile Content -->
     <main class="profile-main">
       <div class="profile-container">
-        <!--profile Header-->
+        <!-- Profile Header -->
         <div class="profile-header">
           <div class="profile-image-section">
             <img
@@ -72,9 +73,9 @@
           </div>
         </div>
 
-        <!--Profile Navigation-->
+        <!-- Profile Navigation -->
         <div class="profile-nav">
-          <button class="profile-nav-btn.active">
+          <button class="profile-nav-btn active">
             <span>📷</span>
             <span>POSTS</span>
           </button>
@@ -87,10 +88,9 @@
             <span>TAGGED</span>
           </button>
         </div>
-        <!--Posts Grid-->
-        <div class="posts-grid" id="postsGrid">
-          <!--posts will be dynamically added here-->
 
+        <!-- Posts Grid -->
+        <div class="posts-grid" id="postsGrid">
           <div class="no-posts">
             <div class="no-posts-icon">📷</div>
             <h2>No posts yet</h2>
@@ -98,6 +98,9 @@
         </div>
       </div>
     </main>
-    <script type="module" src="js/profile.js"></script>
+
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/profile.js"></script>
   </body>
 </html>
