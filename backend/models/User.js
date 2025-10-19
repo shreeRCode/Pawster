@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema(
     profileImage: String,
     followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     following: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    bio: { type: String, default: "" },
   },
   { timestamps: true }
 );

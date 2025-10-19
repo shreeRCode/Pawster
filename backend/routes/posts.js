@@ -17,7 +17,12 @@ router.get("/", async (req, res) => {
   try {
     const posts = await Post.find()
       .populate("user", "username displayName profileImage")
+      .populate("comments.user", "username")
       .sort({ createdAt: -1 });
+    await Post.populate(posts, {
+      path: "comments.user",
+      select: "username displayName profileImage",
+    });
     res.json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -68,7 +73,10 @@ router.post("/:id/comments", verifyToken, async (req, res) => {
     if (!text)
       return res.status(400).json({ error: "Comment text is required" });
 
-    const post = await Post.findById(req.params.id);
+    const post = await Post.findById(req.params.id).populate(
+      "comments.user",
+      "username displayName profileImage"
+    );
     if (!post) return res.status(404).json({ error: "Post not found" });
 
     const comment = {
@@ -79,8 +87,10 @@ router.post("/:id/comments", verifyToken, async (req, res) => {
 
     post.comments.push(comment);
     await post.save();
-    await post.populate("comments.user", "username displayName profileImage");
-
+    await post.populate({
+      path: "comments.user",
+      select: "username displayName profileImage",
+    });
     res.status(201).json(post.comments); // return all comments
   } catch (error) {
     res.status(500).json({ error: error.message });

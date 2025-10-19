@@ -26,6 +26,7 @@ async function loadPosts() {
     if (!response.ok) throw new Error("Failed to load posts");
 
     const posts = await response.json();
+
     posts.forEach((post) => {
       const postElement = createPostElement(post, post._id);
       postsContainer.appendChild(postElement);

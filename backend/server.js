@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const connectDB = require("./config/db");
 const postRoutes = require("./routes/posts");
+const userRoutes = require("./routes/users");
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/uploads", express.static("uploads"));
+app.use("/api/users", userRoutes);
 
 //Routes
 
