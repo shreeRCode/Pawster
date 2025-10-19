@@ -59,14 +59,14 @@ router.post("/follow/:id", async (req, res) => {
       return res.status(400).json({ message: "You cannot follow yourself" });
 
     const userToFollow = await User.findById(req.params.id);
-    const currentUser = await User.findById(currentUserId);
+    const currentUser = await User.findOne({ firebaseId: currentUserId });
 
     if (!userToFollow || !currentUser)
       return res.status(404).json({ message: "User not found" });
 
     if (!userToFollow.followers.includes(currentUserId)) {
-      userToFollow.followers.push(currentUserId);
-      currentUser.following.push(req.params.id);
+      userToFollow.followers.push(currentUser._id);
+      currentUser.following.push(userToFollow._id);
       await userToFollow.save();
       await currentUser.save();
       return res.json({ message: "Followed successfully" });
@@ -83,7 +83,7 @@ router.post("/unfollow/:id", async (req, res) => {
   try {
     const { currentUserId } = req.body;
     const userToUnfollow = await User.findById(req.params.id);
-    const currentUser = await User.findById(currentUserId);
+    const currentUser = await User.findOne({ firebaseId: currentUserId });
 
     userToUnfollow.followers = userToUnfollow.followers.filter(
       (id) => id.toString() !== currentUserId
@@ -96,6 +96,27 @@ router.post("/unfollow/:id", async (req, res) => {
     await currentUser.save();
 
     res.json({ message: "Unfollowed successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+//Suggest users not followed by current user
+
+router.get("/suggestions/:uid", async (req, res) => {
+  try {
+    const currentUser = await User.findOne({
+      firebaseId: req.params.uid,
+    }).populate("following");
+    if (!currentUser)
+      return res.status(404).json({ message: "User not found" });
+    // Get users not in currentUser's following list, exclude self
+    const followingIds = currentUser.following.map((f) => f._id.toString());
+    followingIds.push(currentUser._id.toString());
+    const suggestions = await User.find({ _id: { $nin: followingIds } })
+      .limit(5)
+      .select("username name profileImage firebaseId");
+
+    res.json(suggestions);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

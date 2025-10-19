@@ -1,57 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instagram-clone-Login</title>
-     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pawster - Connect Pets & People</title>
+    <link rel="stylesheet" href="css/landing.css" />
+  </head>
+  <body>
+    <header class="landing-header">
+      <h1 class="logo">Pawster</h1>
+      <nav>
+        <a href="login.html" class="nav-btn">Sign Up</a>
+      </nav>
+    </header>
 
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div class="auth-container">
-        <div class="auth-box">
-            <div class="logo-section">
-                <h1 class="logo">Pawster</h1>
-            </div>
-            <!--Login form-->
-            <form class="auth-form" id="loginForm">
-                <div class="input-group">
-                    <input type="email" id="email" placeholder="email" required>
-                </div>
-                <div class="input-group">
-                    <input type="password" id="password" placeholder="Password" required>
-                </div>
-                <button type="submit" class="auth-btn">Login</button>
-            </form>
-            <!--Divider-->
-            <div class="divider">
-                <span>OR</span>
-            </div>
-            <!-- <div class="alt-login">
-                <a href="#" class="facebook-login">
-                    <span>Log in with facebook</span>
-                </a>
-            </div> -->
-            <div class="alt-login">
-            <button type="button" class="google-sign-in-button" onclick="signInWithGoogle()">
-  <img src="images/Google.jpg" alt="Google Logo" style="width:20px; vertical-align:middle; margin-right: 8px;">Continue with Google
-</button>
-          </div>
-            <!--Forgot Password-->
-            <div class="forgot-password">
-                <a href="forgot.html">Forgot Password?</a>
-            </div>
+    <section class="hero">
+      <div class="hero-text">
+        <h2>Where Pets Meet Their People 🐶🐱</h2>
+        <p>
+          Join a loving community of pet parents. Share moments, find playmates,
+          and celebrate your furry friends.
+        </p>
+        <a href="signup.html" class="cta-btn">Get Started</a>
+      </div>
+      <div class="hero-img">
+        <img src="images/landing-pets.jpg" alt="Happy pets" />
+      </div>
+    </section>
 
-        </div>
-        <!--sign Up Link-->
-        <div class="auth-box signup-link">
-            <p>Don't have an account?<a href="register.html">Sign up</a></p>
-        </div>
-    </div>
-    <script src="js/firebase-config.js"></script>
-    <script src="js/auth.js"></script>
-    
-</body>
+    <section id="features" class="features">
+      <div class="feature">
+        <img src="images/feed-icon.png" alt="Feed" />
+        <h3>Share your Pet Moments</h3>
+        <p>Post pictures of your adorable pets.</p>
+      </div>
+      <div class="feature">
+        <img src="images/friends-icon.jpg" alt="Friends" />
+        <h3>Connect with Pet Lovers</h3>
+        <p>Follow other pet owners and discover cute profiles.</p>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2025 Pawster. Made with ❤️ for pets.</p>
+    </footer>
+  </body>
 </html>

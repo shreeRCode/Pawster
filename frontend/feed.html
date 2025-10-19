@@ -20,13 +20,9 @@
         <div class="nav-logo">
           <h2>Pawster</h2>
         </div>
-        <div class="nav-search">
-          <input type="text" placeholder="Search" class="search-input" />
-        </div>
+
         <div class="nav-icons">
           <a href="feed.html" class="nav-icon active">🏠</a>
-          <a href="#" class="nav-icon">💬</a>
-          <a href="#" class="nav-icon">❤️</a>
           <a href="profile.html" class="nav-icon">👤</a>
         </div>
       </div>
@@ -107,33 +103,13 @@
             class="profile-pic"
           />
           <div class="profile-info">
-            <span class="profile-username">your_username</span>
-            <span class="profile-name">Your Name</span>
+            <span class="profile-username" id="profileUsername"></span>
+            <span class="profile-name" id="profileName"></span>
           </div>
         </div>
         <div class="suggestions-section">
           <h3>Suggestions for you</h3>
-          <div class="suggestion-item">
-            <div class="left">
-              <img src="images/default-avatar.png" alt="User" />
-              <span class="username">user1</span>
-            </div>
-            <button class="follow-btn">Follow</button>
-          </div>
-          <div class="suggestion-item">
-            <div class="left">
-              <img src="images/default-avatar.png" alt="User" />
-              <span class="username">user2</span>
-            </div>
-            <button class="follow-btn">Follow</button>
-          </div>
-          <div class="suggestion-item">
-            <div class="left">
-              <img src="images/default-avatar.png" alt="User" />
-              <span class="username">user3</span>
-            </div>
-            <button class="follow-btn">Follow</button>
-          </div>
+          <div id="suggestionsList"></div>
         </div>
       </aside>
     </main>

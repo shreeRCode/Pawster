@@ -41,7 +41,13 @@ firebase.auth().onAuthStateChanged(async (user) => {
     if (posts.length > 0) {
       posts.forEach((post) => {
         const img = document.createElement("img");
-        img.src = post.imageUrl;
+        img.src =
+          post.imageUrl && post.imageUrl.startsWith("http")
+            ? post.imageUrl
+            : `http://localhost:5000${post.imageUrl || ""}`;
+        img.onerror = () => {
+          img.src = "images/default-post.png"; // fallback/default image in case missing/broken
+        };
         img.classList.add("post-img");
         postsGrid.appendChild(img);
       });

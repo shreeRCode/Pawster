@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (user) {
       console.log("User is signed in:", user.displayName || user.email);
       loadPosts();
+      loadSuggestions();
     }
   });
 });
@@ -393,3 +394,41 @@ closePreview.addEventListener(
 previewModal.addEventListener("click", (e) => {
   if (e.target === previewModal) previewModal.style.display = "none";
 });
+
+//---Suggestions for you ---//
+
+async function loadSuggestions() {
+  if (!currentUser) return;
+  try {
+    //Replace with your backend users endpoint
+    const userSuggestionsApi = `http://localhost:5000/api/users/suggestions/${currentUser.uid}`;
+    const response = await fetch(userSuggestionsApi);
+    if (!response.ok) throw new Error("Suggestion fetch failed");
+    const suggestions = await response.json();
+    const suggestionsList = document.getElementById("suggestionsList");
+    suggestionsList.innerHTML = "";
+    if (suggestions.length === 0) {
+      suggestionsList.innerHTML = "<div>No suggestions available</div>";
+      return;
+    }
+    //Render suggestions
+    suggestions.forEach((user) => {
+      const div = document.createElement("div");
+      div.className = "suggestion-item";
+      div.innerHTML = `
+      <img src="${
+        user.profileImage || "images/default-avatar.png"
+      }"class="suggestion-avatar" alt="User Avatar"style="width:32px;height:32px;border-radius:50%;margin-right:8px;">
+      <span class="suggestion-username">${user.username}</span> 
+        <span class="suggestion-name" style="color:grey;font-size:12px;">${
+          user.name || ""
+        }</span>
+        <a href="profile.html?uid=${
+          user.firebaseId
+        }" class="view-profile-btn">View</a> `;
+      suggestionsList.appendChild(div);
+    });
+  } catch (error) {
+    console.error("Error loading suggestions:", error);
+  }
+}
