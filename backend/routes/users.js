@@ -3,6 +3,20 @@ const router = express.Router();
 const User = require("../models/User");
 const Post = require("../models/Post");
 
+// ✅ Add CORS headers for this router
+router.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://pawster-2rfz.vercel.app"
+  ); // frontend URL
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
 // Get user profile + posts
 router.get("/uid/:uid", async (req, res) => {
   try {
@@ -64,7 +78,7 @@ router.post("/follow/:id", async (req, res) => {
     if (!userToFollow || !currentUser)
       return res.status(404).json({ message: "User not found" });
 
-    if (!userToFollow.followers.includes(currentUserId)) {
+    if (!userToFollow.followers.includes(currentUser._id)) {
       userToFollow.followers.push(currentUser._id);
       currentUser.following.push(userToFollow._id);
       await userToFollow.save();
@@ -86,10 +100,10 @@ router.post("/unfollow/:id", async (req, res) => {
     const currentUser = await User.findOne({ firebaseId: currentUserId });
 
     userToUnfollow.followers = userToUnfollow.followers.filter(
-      (id) => id.toString() !== currentUserId
+      (id) => id.toString() !== currentUser._id.toString()
     );
     currentUser.following = currentUser.following.filter(
-      (id) => id.toString() !== req.params.id
+      (id) => id.toString() !== userToUnfollow._id.toString()
     );
 
     await userToUnfollow.save();
@@ -100,8 +114,8 @@ router.post("/unfollow/:id", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-//Suggest users not followed by current user
 
+// Suggest users not followed by current user
 router.get("/suggestions/:uid", async (req, res) => {
   try {
     const currentUser = await User.findOne({
@@ -109,9 +123,10 @@ router.get("/suggestions/:uid", async (req, res) => {
     }).populate("following");
     if (!currentUser)
       return res.status(404).json({ message: "User not found" });
-    // Get users not in currentUser's following list, exclude self
+
     const followingIds = currentUser.following.map((f) => f._id.toString());
     followingIds.push(currentUser._id.toString());
+
     const suggestions = await User.find({ _id: { $nin: followingIds } })
       .limit(5)
       .select("username name profileImage firebaseId");

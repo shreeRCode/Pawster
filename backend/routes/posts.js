@@ -16,6 +16,20 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
+// ✅ Add this middleware at the top of the router
+router.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    "https://pawster-2rfz.vercel.app"
+  ); // frontend URL
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
+
 //Get all Posts
 router.get("/", async (req, res) => {
   try {
@@ -53,7 +67,6 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
 });
 
 //PUT toggle like
-
 router.put("/:id/like", verifyToken, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
