@@ -11,7 +11,14 @@ const app = express();
 
 connectDB();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://pawster-2rfz.vercel.app", // your actual frontend domain
+    credentials: true,
+  })
+);
+app.use(express.json());
+
 app.use(express.json());
 
 app.use("/api/users", userRoutes);
