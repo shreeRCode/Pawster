@@ -3,15 +3,19 @@ const router = express.Router();
 const Post = require("../models/Post");
 const { verifyToken } = require("../middleware/auth");
 const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const { cloudinary } = require("../config/cloudinary");
 
-const storage = multer.diskStorage({
-  destination: "./uploads/",
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "ds23kbhmn",
+    allowed_formats: ["jpg", "png", "jpeg", "webp"],
   },
 });
 
 const upload = multer({ storage });
+
 //Get all Posts
 router.get("/", async (req, res) => {
   try {
@@ -33,7 +37,7 @@ router.get("/", async (req, res) => {
 router.post("/", verifyToken, upload.single("image"), async (req, res) => {
   try {
     const { caption } = req.body;
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+    const imageUrl = req.file ? req.file.path : null;
     const post = new Post({
       user: req.user._id,
       firebaseUserId: req.user.firebaseId,
