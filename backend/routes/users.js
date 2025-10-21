@@ -3,17 +3,23 @@ const router = express.Router();
 const User = require("../models/User");
 const Post = require("../models/Post");
 
-// ✅ Add CORS headers for this router
+// CORS middleware for users routes
 router.use((req, res, next) => {
   res.setHeader(
     "Access-Control-Allow-Origin",
     "https://pawster-2rfz.vercel.app"
-  ); // frontend URL
+  ); // your frontend
   res.setHeader(
     "Access-Control-Allow-Methods",
     "GET, POST, PUT, DELETE, OPTIONS"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // Handle preflight OPTIONS request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
   next();
 });
 
