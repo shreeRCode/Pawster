@@ -2,7 +2,12 @@ let model = null;
 let modelReady = false;
 let currentUser = null;
 
-const API_URL = "http://localhost:5000/api/posts"; // backend URL
+// Centralized backend URL
+const BASE_API_URL =
+  "https://pawster-cywft4d19-shreerakshas-projects-ae73dc39.vercel.app";
+
+// Posts API endpoint
+const API_URL = `${BASE_API_URL}/api/posts`;
 
 // Load MobileNet model
 async function loadModel() {
@@ -209,7 +214,7 @@ function createPostElement(post, postId) {
 
   const imageSrc = post.imageUrl.startsWith("http")
     ? post.imageUrl
-    : `http://localhost:5000${post.imageUrl}`;
+    : `${BASE_API_URL}/${post.imageUrl}`;
 
   postDiv.innerHTML = `
     <div class="post-header">
@@ -266,19 +271,17 @@ function createPostElement(post, postId) {
   return postDiv;
 }
 
+// Like post event
 postsContainer.addEventListener("click", async (e) => {
   if (e.target.classList.contains("like-btn")) {
     const postDiv = e.target.closest(".post");
     const postId = postDiv.dataset.postId;
     try {
       const token = await currentUser.getIdToken();
-      const response = await fetch(
-        `http://localhost:5000/api/posts/${postId}/like`,
-        {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await fetch(`${BASE_API_URL}/api/posts/${postId}/like`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await response.json();
       postDiv.querySelector(
         ".post-likes span"
@@ -288,8 +291,8 @@ postsContainer.addEventListener("click", async (e) => {
     }
   }
 });
-//to register and display comments
-// To register and display comments
+
+// Comments handler
 postsContainer.addEventListener("click", async (e) => {
   if (e.target.classList.contains("comment-submit")) {
     const postDiv = e.target.closest(".post");
@@ -297,22 +300,16 @@ postsContainer.addEventListener("click", async (e) => {
     const commentInput = postDiv.querySelector(".comment-input");
     const text = commentInput.value.trim();
 
-    // Prevent empty comment
     if (!text) return;
 
     try {
-      // Ensure user is logged in
       if (!currentUser) {
         alert("Please log in to post comments!");
         return;
       }
-
-      // Get Firebase token for authentication
       const token = await currentUser.getIdToken();
-
-      // Send comment to backend
       const response = await fetch(
-        `http://localhost:5000/api/posts/${postId}/comments`,
+        `${BASE_API_URL}/api/posts/${postId}/comments`,
         {
           method: "POST",
           headers: {
@@ -322,29 +319,15 @@ postsContainer.addEventListener("click", async (e) => {
           body: JSON.stringify({ text }),
         }
       );
-
-      // Check if request succeeded
       if (!response.ok) throw new Error("Failed to post comment!");
-
-      // Parse backend response (array of all comments)
       const comments = await response.json();
-
-      // Find the comment container
       const commentsDiv = postDiv.querySelector(".post-comments");
-
-      // Get the newly added comment (last in the list)
       const newComment = comments[comments.length - 1];
-
-      // Check if "No comments yet" exists and remove it
       const noCommentsText = commentsDiv.querySelector(".view-comments");
       if (noCommentsText) {
-        noCommentsText.remove(); // Remove "No comments yet"
+        noCommentsText.remove();
       }
-
-      // Append the new comment
       commentsDiv.innerHTML += `<span><b>${newComment.user.username}</b> ${newComment.text}</span><br>`;
-
-      // Clear input box
       commentInput.value = "";
     } catch (err) {
       console.error("Error posting comment:", err);
@@ -353,24 +336,21 @@ postsContainer.addEventListener("click", async (e) => {
   }
 });
 
-// Show/hide comment input when comment icon is clicked
+// Show/hide comment input
 postsContainer.addEventListener("click", (e) => {
   if (e.target.classList.contains("comment-btn")) {
     const postDiv = e.target.closest(".post");
     const commentSection = postDiv.querySelector(".add-comment-section");
     const commentInput = postDiv.querySelector(".comment-input");
-
-    // Toggle visibility of comment section
     if (commentSection.style.display === "none") {
       commentSection.style.display = "flex";
-      commentInput.focus(); // Automatically focus on input
+      commentInput.focus();
     } else {
       commentSection.style.display = "none";
     }
   }
 });
 
-// Timestamp formatting
 function formatTimestamp(timestamp) {
   if (!timestamp) return "Just Now";
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -395,13 +375,11 @@ previewModal.addEventListener("click", (e) => {
   if (e.target === previewModal) previewModal.style.display = "none";
 });
 
-//---Suggestions for you ---//
-
+// Load user suggestions
 async function loadSuggestions() {
   if (!currentUser) return;
   try {
-    //Replace with your backend users endpoint
-    const userSuggestionsApi = `http://localhost:5000/api/users/suggestions/${currentUser.uid}`;
+    const userSuggestionsApi = `${BASE_API_URL}/api/users/suggestions/${currentUser.uid}`;
     const response = await fetch(userSuggestionsApi);
     if (!response.ok) throw new Error("Suggestion fetch failed");
     const suggestions = await response.json();
@@ -411,21 +389,20 @@ async function loadSuggestions() {
       suggestionsList.innerHTML = "<div>No suggestions available</div>";
       return;
     }
-    //Render suggestions
     suggestions.forEach((user) => {
       const div = document.createElement("div");
       div.className = "suggestion-item";
       div.innerHTML = `
       <img src="${
         user.profileImage || "images/default-avatar.png"
-      }"class="suggestion-avatar" alt="User Avatar"style="width:32px;height:32px;border-radius:50%;margin-right:8px;">
+      }"class="suggestion-avatar" alt="User Avatar" style="width:32px;height:32px;border-radius:50%;margin-right:8px;">
       <span class="suggestion-username">${user.username}</span> 
-        <span class="suggestion-name" style="color:grey;font-size:12px;">${
-          user.name || ""
-        }</span>
+        <span class="suggestion-name" style="color:grey;font-size:12px;">
+           ${user.name || ""}
+        </span>
         <a href="profile.html?uid=${
           user.firebaseId
-        }" class="view-profile-btn">View</a> `;
+        }" class="view-profile-btn">View</a>`;
       suggestionsList.appendChild(div);
     });
   } catch (error) {
