@@ -1,4 +1,6 @@
-const API_URL = "http://localhost:5000/api/users";
+const BASE_API_URL =
+  "https://pawster-cywft4d19-shreerakshas-projects-ae73dc39.vercel.app";
+const USER_API_URL = `${BASE_API_URL}/api/users`;
 
 const usernameElem = document.querySelector(".profile-username");
 const bioElem = document.querySelector(".bio-text");
@@ -21,7 +23,13 @@ firebase.auth().onAuthStateChanged(async (user) => {
   const token = await user.getIdToken();
 
   try {
-    const res = await fetch(`${API_URL}/uid/${profileUserId || user.uid}`);
+    // Fetch profile data with auth header
+    const res = await fetch(
+      `${USER_API_URL}/uid/${profileUserId || user.uid}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.message || "Failed to fetch profile");
@@ -44,9 +52,9 @@ firebase.auth().onAuthStateChanged(async (user) => {
         img.src =
           post.imageUrl && post.imageUrl.startsWith("http")
             ? post.imageUrl
-            : `http://localhost:5000${post.imageUrl || ""}`;
+            : `${BASE_API_URL}/${post.imageUrl || ""}`;
         img.onerror = () => {
-          img.src = "images/default-post.png"; // fallback/default image in case missing/broken
+          img.src = "images/default-post.png"; // fallback/default image
         };
         img.classList.add("post-img");
         postsGrid.appendChild(img);
@@ -78,7 +86,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
       try {
         const action =
           followBtn.textContent === "Follow" ? "follow" : "unfollow";
-        const res = await fetch(`${API_URL}/${action}/${userToView._id}`, {
+        const res = await fetch(`${USER_API_URL}/${action}/${userToView._id}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -116,7 +124,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
       const newBio = prompt("Enter new Bio:");
       if (!newUsername) return;
 
-      const res = await fetch(`${API_URL}/edit/${currentUserId}`, {
+      const res = await fetch(`${USER_API_URL}/edit/${currentUserId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
