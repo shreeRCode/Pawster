@@ -1,5 +1,4 @@
-const BASE_API_URL =
-  "https://pawster-cywft4d19-shreerakshas-projects-ae73dc39.vercel.app";
+const BASE_API_URL = "https://pawster-pi.vercel.app";
 const USER_API_URL = `${BASE_API_URL}/api/users`;
 
 const usernameElem = document.querySelector(".profile-username");
