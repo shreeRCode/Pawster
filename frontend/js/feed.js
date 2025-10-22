@@ -3,7 +3,7 @@ let modelReady = false;
 let currentUser = null;
 
 // Centralized backend URL
-const BASE_API_URL = "https://pawster-pi.vercel.app/";
+const BASE_API_URL = "https://pawster-pi.vercel.app";
 
 // Posts API endpoint
 const API_URL = `${BASE_API_URL}/api/posts`;
