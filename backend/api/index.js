@@ -1,6 +1,5 @@
 const express = require("express");
 const cors = require("cors");
-const path = require("path");
 require("dotenv").config();
 
 const connectDB = require("../config/db");
@@ -13,14 +12,18 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://pawster-2rfz.vercel.app", // your actual frontend domain
+    origin: "https://pawster-2rfz.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
   })
 );
+
+app.options("*", cors());
+
 app.use(express.json());
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
 
-// Remove app.listen for Vercel
 module.exports = app;
