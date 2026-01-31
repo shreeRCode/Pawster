@@ -3,6 +3,19 @@ const router = express.Router();
 const User = require("../models/User");
 const Post = require("../models/Post");
 
+router.get("/", async (req, res) => {
+  try {
+    const users = await User.find()
+      .select("username name bio profileImage firebaseId followers following")
+      .limit(20) // Limit to prevent too much data
+      .sort({ createdAt: -1 });
+
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 // ===============================
 // Get user profile + posts
 // ===============================
