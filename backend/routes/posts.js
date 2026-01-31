@@ -14,24 +14,24 @@ const storage = new CloudinaryStorage({
   },
 });
 // CORS middleware for posts routes
-router.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://pawster-2rfz.vercel.app"
-  ); // your frontend
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+// router.use((req, res, next) => {
+//   res.setHeader(
+//     "Access-Control-Allow-Origin",
+//     "https://pawster-2rfz.vercel.app"
+//   ); // your frontend
+//   res.setHeader(
+//     "Access-Control-Allow-Methods",
+//     "GET, POST, PUT, DELETE, OPTIONS"
+//   );
+//   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-  // Handle preflight OPTIONS request
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
+//   // Handle preflight OPTIONS request
+//   if (req.method === "OPTIONS") {
+//     return res.sendStatus(204);
+//   }
 
-  next();
-});
+//   next();
+// });
 
 const upload = multer({ storage });
 
@@ -97,7 +97,7 @@ router.post("/:id/comments", verifyToken, async (req, res) => {
 
     const post = await Post.findById(req.params.id).populate(
       "comments.user",
-      "username displayName profileImage"
+      "username displayName profileImage",
     );
     if (!post) return res.status(404).json({ error: "Post not found" });
 

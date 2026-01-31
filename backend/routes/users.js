@@ -3,27 +3,9 @@ const router = express.Router();
 const User = require("../models/User");
 const Post = require("../models/Post");
 
-// CORS middleware for users routes
-router.use((req, res, next) => {
-  res.setHeader(
-    "Access-Control-Allow-Origin",
-    "https://pawster-2rfz.vercel.app"
-  ); // your frontend
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  // Handle preflight OPTIONS request
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
-  }
-
-  next();
-});
-
+// ===============================
 // Get user profile + posts
+// ===============================
 router.get("/uid/:uid", async (req, res) => {
   try {
     const user = await User.findOne({ firebaseId: req.params.uid })
@@ -53,7 +35,9 @@ router.get("/uid/:uid", async (req, res) => {
   }
 });
 
+// ===============================
 // Edit profile
+// ===============================
 router.put("/edit/:uid", async (req, res) => {
   try {
     const { username, bio } = req.body;
@@ -71,10 +55,13 @@ router.put("/edit/:uid", async (req, res) => {
   }
 });
 
-// Follow a user
+// ===============================
+// Follow
+// ===============================
 router.post("/follow/:id", async (req, res) => {
   try {
     const { currentUserId } = req.body;
+
     if (req.params.id === currentUserId)
       return res.status(400).json({ message: "You cannot follow yourself" });
 
@@ -87,8 +74,10 @@ router.post("/follow/:id", async (req, res) => {
     if (!userToFollow.followers.includes(currentUser._id)) {
       userToFollow.followers.push(currentUser._id);
       currentUser.following.push(userToFollow._id);
+
       await userToFollow.save();
       await currentUser.save();
+
       return res.json({ message: "Followed successfully" });
     }
 
@@ -98,18 +87,25 @@ router.post("/follow/:id", async (req, res) => {
   }
 });
 
-// Unfollow user
+// ===============================
+// Unfollow
+// ===============================
 router.post("/unfollow/:id", async (req, res) => {
   try {
     const { currentUserId } = req.body;
+
     const userToUnfollow = await User.findById(req.params.id);
     const currentUser = await User.findOne({ firebaseId: currentUserId });
 
+    if (!userToUnfollow || !currentUser)
+      return res.status(404).json({ message: "User not found" });
+
     userToUnfollow.followers = userToUnfollow.followers.filter(
-      (id) => id.toString() !== currentUser._id.toString()
+      (id) => id.toString() !== currentUser._id.toString(),
     );
+
     currentUser.following = currentUser.following.filter(
-      (id) => id.toString() !== userToUnfollow._id.toString()
+      (id) => id.toString() !== userToUnfollow._id.toString(),
     );
 
     await userToUnfollow.save();
@@ -121,19 +117,25 @@ router.post("/unfollow/:id", async (req, res) => {
   }
 });
 
-// Suggest users not followed by current user
+// ===============================
+// Suggestions
+// ===============================
 router.get("/suggestions/:uid", async (req, res) => {
   try {
     const currentUser = await User.findOne({
       firebaseId: req.params.uid,
     }).populate("following");
+
     if (!currentUser)
       return res.status(404).json({ message: "User not found" });
 
     const followingIds = currentUser.following.map((f) => f._id.toString());
+
     followingIds.push(currentUser._id.toString());
 
-    const suggestions = await User.find({ _id: { $nin: followingIds } })
+    const suggestions = await User.find({
+      _id: { $nin: followingIds },
+    })
       .limit(5)
       .select("username name profileImage firebaseId");
 
