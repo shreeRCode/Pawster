@@ -13,9 +13,9 @@ connectDB();
 
 app.use(
   cors({
-    origin: "https://pawster-2rfz.vercel.app", // your actual frontend domain
+    origin: ["http://localhost:5173", "https://pawster-2rfz.vercel.app"], // your actual frontend domain
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 
