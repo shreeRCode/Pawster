@@ -195,15 +195,14 @@ router.get("/suggestions/:uid", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-// =====================================
-// Sync Firebase user with Mongo
-// =====================================
 router.post("/sync", async (req, res) => {
   try {
     const { firebaseId, email, name } = req.body;
 
-    if (!firebaseId) {
-      return res.status(400).json({ message: "Firebase ID required" });
+    if (!firebaseId || !email) {
+      return res
+        .status(400)
+        .json({ message: "Firebase ID and email required" });
     }
 
     let user = await User.findOne({ firebaseId });
@@ -211,9 +210,8 @@ router.post("/sync", async (req, res) => {
     if (!user) {
       user = await User.create({
         firebaseId,
-        username: email
-          ? email.split("@")[0]
-          : "user_" + firebaseId.slice(0, 5),
+        email, // ✅ FIXED
+        username: email.split("@")[0], // simple username from email
         name: name || "",
         bio: "",
         profileImage: "",
@@ -224,6 +222,7 @@ router.post("/sync", async (req, res) => {
 
     res.json(user);
   } catch (err) {
+    console.error("SYNC ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 });
