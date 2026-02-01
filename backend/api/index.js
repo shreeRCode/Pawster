@@ -12,23 +12,34 @@ connectDB();
 
 app.use(express.json());
 
-// CORS configuration
+// CORS configuration - Allow all Vercel deployments
 const corsOptions = {
-  origin: [
-    "http://localhost:5173",
-    "https://pawster-2rfz.vercel.app",
-    "https://pawster-2rfz-3i3xn9086-shreerakshas-projects-ae73dc39.vercel.app",
-  ],
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    const allowedOrigins = [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://pawster-2rfz.vercel.app",
+    ];
+
+    // Allow any Vercel preview deployment URL
+    const isVercelPreview =
+      origin.includes("pawster-") && origin.includes("vercel.app");
+
+    if (allowedOrigins.indexOf(origin) !== -1 || isVercelPreview) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 };
 
-// Apply CORS globally - this handles OPTIONS preflight requests automatically
 app.use(cors(corsOptions));
-
-// Remove this line - it's redundant and causing the error:
-// app.options("*", cors());
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
