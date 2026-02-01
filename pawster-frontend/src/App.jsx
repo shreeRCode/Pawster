@@ -46,41 +46,51 @@ function App() {
       {user && <Navbar user={user} />}
 
       <Routes>
-        {/* Public */}
-        <Route path="/" element={<Landing />} />
+        {/* Landing page - redirect to feed if logged in */}
+        <Route
+          path="/"
+          element={user ? <Navigate to="/feed" replace /> : <Landing />}
+        />
 
+        {/* Auth routes - redirect to feed if already logged in */}
         <Route
           path="/login"
-          element={user ? <Navigate to="/feed" /> : <Login />}
+          element={user ? <Navigate to="/feed" replace /> : <Login />}
         />
 
         <Route
           path="/register"
-          element={user ? <Navigate to="/feed" /> : <Register />}
+          element={user ? <Navigate to="/feed" replace /> : <Register />}
         />
 
         <Route path="/forgot" element={<Forgot />} />
 
-        {/* Protected */}
+        {/* Protected routes */}
         <Route
           path="/feed"
-          element={user ? <Feed user={user} /> : <Navigate to="/login" />}
+          element={
+            user ? <Feed user={user} /> : <Navigate to="/login" replace />
+          }
         />
 
         {/* Own profile - redirects to profile with query param */}
         <Route
           path="/profile"
-          element={user ? <Profile user={user} /> : <Navigate to="/login" />}
+          element={
+            user ? <Profile user={user} /> : <Navigate to="/login" replace />
+          }
         />
 
         {/* Other user's profile by username */}
         <Route
           path="/profile/:username"
-          element={user ? <Profile user={user} /> : <Navigate to="/login" />}
+          element={
+            user ? <Profile user={user} /> : <Navigate to="/login" replace />
+          }
         />
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
