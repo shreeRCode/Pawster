@@ -106,9 +106,6 @@ function Register() {
         generatedUsername,
         firebaseUser.displayName,
       );
-
-      // Navigate to feed - App.jsx will handle this via onAuthStateChanged
-      navigate("/feed", { replace: true });
     } catch (error) {
       console.error("Google Sign-Up error:", error);
 

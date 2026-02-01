@@ -85,9 +85,6 @@ function Login() {
 
       // Sync to backend
       await syncUserToBackend(firebaseUser);
-
-      // Navigate to feed
-      navigate("/feed", { replace: true });
     } catch (error) {
       console.error("Google Sign-In error:", error);
 
