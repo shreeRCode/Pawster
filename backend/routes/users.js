@@ -195,5 +195,37 @@ router.get("/suggestions/:uid", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
+// =====================================
+// Sync Firebase user with Mongo
+// =====================================
+router.post("/sync", async (req, res) => {
+  try {
+    const { firebaseId, email, name } = req.body;
+
+    if (!firebaseId) {
+      return res.status(400).json({ message: "Firebase ID required" });
+    }
+
+    let user = await User.findOne({ firebaseId });
+
+    if (!user) {
+      user = await User.create({
+        firebaseId,
+        username: email
+          ? email.split("@")[0]
+          : "user_" + firebaseId.slice(0, 5),
+        name: name || "",
+        bio: "",
+        profileImage: "",
+        followers: [],
+        following: [],
+      });
+    }
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;
