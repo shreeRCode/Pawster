@@ -4,7 +4,6 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase/firebaseConfig";
 
 import Navbar from "./components/Navbar";
-
 import Landing from "./pages/Landing";
 import Feed from "./pages/Feed";
 import Login from "./pages/Login";
@@ -21,67 +20,50 @@ function App() {
       setUser(currentUser);
       setLoading(false);
     });
-
-    return () => unsubscribe();
+    return unsubscribe;
   }, []);
 
   if (loading) {
     return (
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
-        }}
-      >
-        <div className="loading-spinner"></div>
+      <div className="full-page-center">
+        <div className="loading-spinner" />
       </div>
     );
   }
 
   return (
     <BrowserRouter>
-      {/* Show Navbar only if logged in */}
       {user && <Navbar user={user} />}
 
       <Routes>
-        {/* Landing page - redirect to feed if logged in */}
+        {/* Public */}
         <Route
           path="/"
           element={user ? <Navigate to="/feed" replace /> : <Landing />}
         />
-
-        {/* Auth routes - redirect to feed if already logged in */}
         <Route
           path="/login"
           element={user ? <Navigate to="/feed" replace /> : <Login />}
         />
-
         <Route
           path="/register"
           element={user ? <Navigate to="/feed" replace /> : <Register />}
         />
-
         <Route path="/forgot" element={<Forgot />} />
 
-        {/* Protected routes */}
+        {/* Protected */}
         <Route
           path="/feed"
           element={
             user ? <Feed user={user} /> : <Navigate to="/login" replace />
           }
         />
-
-        {/* Own profile - redirects to profile with query param */}
         <Route
           path="/profile"
           element={
             user ? <Profile user={user} /> : <Navigate to="/login" replace />
           }
         />
-
-        {/* Other user's profile by username */}
         <Route
           path="/profile/:username"
           element={

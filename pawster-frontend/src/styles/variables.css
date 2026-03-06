@@ -1,17 +1,9 @@
-/* CSS Variables */
-
 :root {
-  /* Primary Colors */
   --primary: #667eea;
   --primary-dark: #5568d3;
   --secondary: #764ba2;
-  --accent: #f093fb;
-
-  /* Gradient */
   --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-hover: linear-gradient(135deg, #5568d3 0%, #6a4199 100%);
 
-  /* Neutral Colors */
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
   --gray-200: #e5e7eb;
@@ -23,70 +15,30 @@
   --gray-800: #1f2937;
   --gray-900: #111827;
 
-  /* Text Colors */
   --text: #1f2937;
   --text-light: #374151;
   --text-muted: #6b7280;
-  --text-disabled: #9ca3af;
 
-  /* Background */
   --bg: #f9fafb;
-  --bg-secondary: #f3f4f6;
   --white: #ffffff;
-
-  /* Border */
   --border: #e5e7eb;
-  --border-light: #f3f4f6;
-
-  /* Link */
   --link: #667eea;
-  --link-hover: #5568d3;
 
-  /* Status Colors */
   --success: #10b981;
   --success-light: #d1fae5;
   --error: #ef4444;
   --error-light: #fee2e2;
-  --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --info: #3b82f6;
-  --info-light: #dbeafe;
 
-  /* Shadows */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
 
-  /* Border Radius */
   --radius-sm: 8px;
   --radius: 12px;
   --radius-lg: 16px;
-  --radius-xl: 20px;
   --radius-full: 9999px;
 
-  /* Spacing */
-  --space-xs: 4px;
-  --space-sm: 8px;
-  --space-md: 12px;
-  --space-lg: 16px;
-  --space-xl: 20px;
-  --space-2xl: 24px;
-
-  /* Transitions */
-  --transition-fast: 0.15s ease;
   --transition: 0.2s ease;
   --transition-slow: 0.3s ease;
-
-  /* Z-index */
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
-  --z-popover: 1060;
-  --z-tooltip: 1070;
 }
-
-/* Dark Mode Variables (Optional - for future use) */

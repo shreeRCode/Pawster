@@ -1,58 +1,60 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Upload from "../components/Upload";
 import Post from "../components/Post";
 import Suggestions from "../components/Suggestions";
+import { fetchPosts, fetchProfileByUid } from "../services/api";
 import "../styles/feed.css";
-
-const BASE_API_URL = "https://pawster-pi.vercel.app";
 
 function Feed({ user }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUserMongoId, setCurrentUserMongoId] = useState(null);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchPosts();
-    if (user) {
-      fetchCurrentUserMongoId();
-    }
-  }, [user]);
-
-  const fetchCurrentUserMongoId = async () => {
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch(`${BASE_API_URL}/api/users/uid/${user.uid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setCurrentUserMongoId(data.user._id);
-    } catch (err) {
-      console.error("Error fetching user MongoDB ID:", err);
-    }
-  };
-
-  const fetchPosts = async () => {
+  const loadPosts = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${BASE_API_URL}/api/posts`);
-      const data = await res.json();
+      setError("");
+      const data = await fetchPosts();
       setPosts(data);
     } catch (err) {
-      console.error("Error loading posts:", err);
+      console.error(err);
+      setError("Failed to load posts. Please refresh.");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      try {
+        const data = await fetchProfileByUid(user, user.uid);
+        setCurrentUserMongoId(data.user._id);
+      } catch (err) {
+        console.error("Could not fetch mongo ID:", err);
+      }
+    })();
+  }, [user]);
 
   return (
     <main className="main-content">
       <div className="feed-container">
-        <Upload user={user} onPostUploaded={fetchPosts} />
+        <Upload user={user} onPostUploaded={loadPosts} />
 
         {loading ? (
           <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Loading posts...</p>
+            <div className="loading-spinner" />
+            <p>Loading posts…</p>
+          </div>
+        ) : error ? (
+          <div className="empty-state">
+            <div className="empty-icon">⚠️</div>
+            <h3>{error}</h3>
           </div>
         ) : posts.length === 0 ? (
           <div className="empty-state">
@@ -68,7 +70,7 @@ function Feed({ user }) {
                 post={post}
                 user={user}
                 currentUserMongoId={currentUserMongoId}
-                refreshPosts={fetchPosts}
+                refreshPosts={loadPosts}
               />
             ))}
           </div>

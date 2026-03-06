@@ -1,122 +1,55 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../firebase/firebaseConfig";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from "firebase/auth";
-
-const BASE_API_URL = "https://pawster-pi.vercel.app";
+import { registerUser, loginWithGoogle } from "../services/auth";
+import { syncUser } from "../services/api";
 
 function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [fullname, setFullname] = useState("");
-  const [username, setUsername] = useState("");
-  const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    fullname: "",
+    username: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const syncUserToBackend = async (
-    firebaseUser,
-    customUsername,
-    customDisplayName,
-  ) => {
-    try {
-      const response = await fetch(`${BASE_API_URL}/api/users/sync`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firebaseId: firebaseUser.uid,
-          email: firebaseUser.email,
-          username:
-            customUsername ||
-            firebaseUser.email.split("@")[0] + "_" + Date.now(),
-          displayName: customDisplayName || firebaseUser.displayName,
-          name: customDisplayName || firebaseUser.displayName,
-        }),
-      });
+  const update = (field) => (e) =>
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-      if (!response.ok) {
-        console.error("Failed to sync user to backend");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error syncing user:", error);
-      // Don't block registration if backend sync fails
-    }
-  };
-
-  // =============================
-  // Email + Password Signup
-  // =============================
   const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+    setError("");
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-
-      const firebaseUser = userCredential.user;
-
-      // Sync to backend
-      await syncUserToBackend(firebaseUser, username, fullname);
-
-      // Send verification email
-      await sendEmailVerification(firebaseUser);
-
-      alert(
-        "Signup successful! A verification email has been sent. Please verify before logging in.",
-      );
-
+      const firebaseUser = await registerUser(form.email, form.password);
+      await syncUser(firebaseUser, {
+        username: form.username,
+        displayName: form.fullname,
+        name: form.fullname,
+      });
       navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("Signup error:", error);
-      alert("Signup failed: " + error.message);
+      // A toast would be better here; keeping it simple for now
+      alert("Account created! Please verify your email before logging in.");
+    } catch (err) {
+      setError(err.message || "Registration failed.");
+    } finally {
       setLoading(false);
     }
   };
 
-  // =============================
-  // Google Signup
-  // =============================
   const handleGoogleSignup = async () => {
     setLoading(true);
-
+    setError("");
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const firebaseUser = result.user;
-
-      const generatedUsername =
-        firebaseUser.email.split("@")[0] + "_" + Date.now();
-
-      // Sync to backend
-      await syncUserToBackend(
-        firebaseUser,
-        generatedUsername,
-        firebaseUser.displayName,
-      );
-    } catch (error) {
-      console.error("Google Sign-Up error:", error);
-
-      // Check if it's a popup closed error
-      if (error.code === "auth/popup-closed-by-user") {
-        // User closed the popup, just reset loading state
-        setLoading(false);
-        return;
+      const firebaseUser = await loginWithGoogle();
+      await syncUser(firebaseUser);
+      navigate("/feed", { replace: true });
+    } catch (err) {
+      if (err.code !== "auth/popup-closed-by-user") {
+        setError(err.message || "Google sign-up failed.");
       }
-
-      alert("Google Sign-Up failed: " + error.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -126,79 +59,79 @@ function Register() {
       <div className="auth-box">
         <h1 className="logo">Pawster</h1>
         <p className="auth-subtitle">
-          Sign up to see photos and videos from your friends.
+          Sign up to share pet moments with the world.
         </p>
 
-        {/* Google Signup */}
         <button
           type="button"
           className="google-sign-in-button"
           onClick={handleGoogleSignup}
           disabled={loading}
         >
-          {loading ? "Signing up..." : "Continue with Google"}
+          {loading ? "Signing up…" : "Continue with Google"}
         </button>
 
         <div className="divider">
           <span>OR</span>
         </div>
 
-        {/* Email Signup Form */}
+        {error && <div className="auth-error">{error}</div>}
+
         <form className="auth-form" onSubmit={handleRegister}>
           <div className="input-group">
             <input
               type="email"
               placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={form.email}
+              onChange={update("email")}
               required
               disabled={loading}
+              autoComplete="email"
             />
           </div>
-
           <div className="input-group">
             <input
               type="text"
               placeholder="Full Name"
-              value={fullname}
-              onChange={(e) => setFullname(e.target.value)}
+              value={form.fullname}
+              onChange={update("fullname")}
               required
               disabled={loading}
+              autoComplete="name"
             />
           </div>
-
           <div className="input-group">
             <input
               type="text"
               placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={form.username}
+              onChange={update("username")}
               required
               disabled={loading}
+              autoComplete="username"
             />
           </div>
-
           <div className="input-group">
             <input
               type="password"
               placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={form.password}
+              onChange={update("password")}
               required
               disabled={loading}
+              autoComplete="new-password"
+              minLength={6}
             />
           </div>
-
           <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Signing up..." : "Sign up"}
+            {loading ? "Creating account…" : "Sign up"}
           </button>
         </form>
       </div>
 
       <div className="auth-box signup-link">
         <p>
-          Have an account?
-          <Link to="/login"> Login</Link>
+          Have an account? <Link to="/login">Login</Link>
         </p>
       </div>
     </div>

@@ -1,13 +1,12 @@
-/* Navigation Bar Styles */
-
+/* ===== Navbar ===== */
 .navbar {
   background: white;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border);
   position: fixed;
   top: 0;
   width: 100%;
   z-index: 1000;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .nav-container {
@@ -20,7 +19,6 @@
   padding: 0 24px;
 }
 
-/* Logo */
 .nav-logo {
   text-decoration: none;
 }
@@ -28,7 +26,7 @@
 .nav-logo h2 {
   font-size: 28px;
   font-weight: 800;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -44,90 +42,65 @@
   -webkit-text-fill-color: initial;
 }
 
-/* Icons */
 .nav-icons {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 8px;
 }
 
 .nav-icon {
   font-size: 26px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   padding: 8px;
-  border-radius: 12px;
-  position: relative;
+  border-radius: var(--radius);
   background: none;
   border: none;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
 }
 
 .nav-icon:hover {
-  background: #f3f4f6;
+  background: var(--gray-100);
   transform: scale(1.05);
 }
 
-.nav-icon:active {
-  transform: scale(0.95);
-}
-
 .logout-btn {
-  color: inherit;
   font-size: 26px;
 }
 
-/* Profile Avatar */
 .nav-profile {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--gradient);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-weight: 600;
   font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition);
   border: 2px solid transparent;
 }
 
-.nav-profile:hover {
-  border-color: #667eea;
-  transform: scale(1.05);
+.nav-icon:hover .nav-profile {
+  border-color: var(--primary);
 }
 
-/* Notification Badge */
-.notification-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  background: #ef4444;
-  border-radius: 50%;
-  border: 2px solid white;
-}
-
-/* Responsive */
 @media (max-width: 640px) {
   .nav-container {
     padding: 0 16px;
     height: 56px;
   }
-
   .nav-logo h2 {
-    font-size: 24px;
+    font-size: 22px;
   }
-
-  .nav-icons {
-    gap: 12px;
-  }
-
   .nav-icon {
-    font-size: 24px;
+    font-size: 22px;
     padding: 6px;
   }
 }

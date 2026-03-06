@@ -1,56 +1,35 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/feed.css";
-
-const BASE_API_URL = "https://pawster-pi.vercel.app";
+import { fetchSuggestions, followUser } from "../services/api";
 
 function Suggestions({ user }) {
+  const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) return;
-    fetchSuggestions();
+    if (user) loadSuggestions();
   }, [user]);
 
-  const fetchSuggestions = async () => {
+  const loadSuggestions = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await fetch(
-        `${BASE_API_URL}/api/users/suggestions/${user.uid}`,
-      );
-      const data = await res.json();
+      const data = await fetchSuggestions(user.uid);
       setSuggestions(data);
     } catch (err) {
-      console.error("Error loading suggestions:", err);
+      console.error("Suggestions error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFollow = async (userId) => {
+  const handleFollow = async (mongoId) => {
     try {
-      const token = await user.getIdToken();
-      await fetch(`${BASE_API_URL}/api/users/follow/${userId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ currentUserId: user.uid }),
-      });
-
-      // Remove from suggestions after following
-      setSuggestions(suggestions.filter((s) => s._id !== userId));
+      await followUser(user, mongoId);
+      setSuggestions((prev) => prev.filter((s) => s._id !== mongoId));
     } catch (err) {
-      console.error("Error following user:", err);
+      console.error("Follow error:", err);
     }
-  };
-
-  // Navigate to user's profile
-  const handleProfileClick = (username) => {
-    navigate(`/profile/${username}`);
   };
 
   if (!user) return null;
@@ -60,14 +39,14 @@ function Suggestions({ user }) {
       <div className="suggestions-container">
         <div className="suggestions-header">
           <h3>Suggestions for you</h3>
-          <button className="see-all-btn" onClick={fetchSuggestions}>
+          <button className="see-all-btn" onClick={loadSuggestions}>
             Refresh
           </button>
         </div>
 
         {loading ? (
           <div className="suggestions-loading">
-            <div className="loading-spinner"></div>
+            <div className="loading-spinner" />
           </div>
         ) : suggestions.length === 0 ? (
           <div className="suggestions-empty">
@@ -77,19 +56,16 @@ function Suggestions({ user }) {
           <div className="suggestions-list">
             {suggestions.map((s) => (
               <div key={s._id} className="suggestion-item">
-                {/* Clickable avatar */}
                 <div
                   className="suggestion-avatar clickable"
-                  onClick={() => handleProfileClick(s.username)}
+                  onClick={() => navigate(`/profile/${s.username}`)}
                 >
                   {s.username?.charAt(0).toUpperCase()}
                 </div>
-
-                {/* Clickable username */}
                 <div className="suggestion-info">
                   <span
                     className="suggestion-username clickable"
-                    onClick={() => handleProfileClick(s.username)}
+                    onClick={() => navigate(`/profile/${s.username}`)}
                   >
                     {s.username}
                   </span>
@@ -97,8 +73,6 @@ function Suggestions({ user }) {
                     {s.name || "New to Pawster"}
                   </span>
                 </div>
-
-                {/* Follow button */}
                 <button
                   className="follow-btn"
                   onClick={() => handleFollow(s._id)}

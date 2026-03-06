@@ -1,46 +1,64 @@
 import { useState } from "react";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { auth } from "../firebase/firebaseConfig";
 import { Link } from "react-router-dom";
+import { resetPassword } from "../services/auth";
 
 function Forgot() {
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const handleReset = async (e) => {
     e.preventDefault();
-
+    setLoading(true);
+    setError("");
     try {
-      await sendPasswordResetEmail(auth, email);
-      alert("Password reset link sent! Check your email.");
+      await resetPassword(email);
+      setSuccess(true);
       setEmail("");
-    } catch (error) {
-      alert("Error: " + error.message);
+    } catch (err) {
+      setError(err.message || "Failed to send reset email.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h2>Reset Password</h2>
+        <h1 className="logo">Pawster</h1>
+        <p className="auth-subtitle">
+          Enter your email to reset your password.
+        </p>
 
-        <form onSubmit={handleReset}>
+        {success && (
+          <div className="auth-success">Reset link sent! Check your inbox.</div>
+        )}
+        {error && <div className="auth-error">{error}</div>}
+
+        <form className="auth-form" onSubmit={handleReset}>
           <div className="input-group">
             <input
               type="email"
-              placeholder="Enter your email"
+              placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading || success}
+              autoComplete="email"
             />
           </div>
-
-          <button type="submit" className="auth-btn">
-            Send Reset Link
+          <button
+            type="submit"
+            className="auth-btn"
+            disabled={loading || success}
+          >
+            {loading ? "Sending…" : "Send Reset Link"}
           </button>
         </form>
 
         <div className="forgot-password">
-          <Link to="/login">Back to Login</Link>
+          <Link to="/login">← Back to Login</Link>
         </div>
       </div>
     </div>

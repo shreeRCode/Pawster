@@ -1,101 +1,42 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { auth } from "../firebase/firebaseConfig";
-import {
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-} from "firebase/auth";
-
-const BASE_API_URL = "https://pawster-pi.vercel.app";
+import { loginUser, loginWithGoogle } from "../services/auth";
+import { syncUser } from "../services/api";
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-
-  const syncUserToBackend = async (firebaseUser) => {
-    try {
-      const response = await fetch(`${BASE_API_URL}/api/users/sync`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          firebaseId: firebaseUser.uid,
-          email: firebaseUser.email,
-          username: firebaseUser.email.split("@")[0] + "_" + Date.now(),
-          displayName:
-            firebaseUser.displayName || firebaseUser.email.split("@")[0],
-          name: firebaseUser.displayName || firebaseUser.email.split("@")[0],
-        }),
-      });
-
-      if (!response.ok) {
-        console.error("Failed to sync user to backend");
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error("Error syncing user:", error);
-      // Don't block login if backend sync fails
-    }
-  };
+  const [error, setError] = useState("");
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+    setError("");
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password,
-      );
-
-      const firebaseUser = userCredential.user;
-
-      if (!firebaseUser.emailVerified) {
-        await signOut(auth);
-        alert("Please verify your email first.");
-        setLoading(false);
-        return;
-      }
-
-      // Sync to backend
-      await syncUserToBackend(firebaseUser);
-
-      // Navigate to feed - the App.jsx will handle this via onAuthStateChanged
-      // but we call it explicitly for immediate feedback
+      const firebaseUser = await loginUser(email, password);
+      await syncUser(firebaseUser);
       navigate("/feed", { replace: true });
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Login failed: " + error.message);
+    } catch (err) {
+      setError(err.message || "Login failed. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-
+    setError("");
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const firebaseUser = result.user;
-
-      // Sync to backend
-      await syncUserToBackend(firebaseUser);
-    } catch (error) {
-      console.error("Google Sign-In error:", error);
-
-      // Check if it's a popup closed error
-      if (error.code === "auth/popup-closed-by-user") {
-        // User closed the popup, just reset loading state
-        setLoading(false);
-        return;
+      const firebaseUser = await loginWithGoogle();
+      await syncUser(firebaseUser);
+      navigate("/feed", { replace: true });
+    } catch (err) {
+      if (err.code !== "auth/popup-closed-by-user") {
+        setError(err.message || "Google sign-in failed.");
       }
-
-      alert("Google Sign-In failed: " + error.message);
+    } finally {
       setLoading(false);
     }
   };
@@ -104,6 +45,8 @@ function Login() {
     <div className="auth-container">
       <div className="auth-box">
         <h1 className="logo">Pawster</h1>
+
+        {error && <div className="auth-error">{error}</div>}
 
         <form className="auth-form" onSubmit={handleLogin}>
           <div className="input-group">
@@ -114,9 +57,9 @@ function Login() {
               onChange={(e) => setEmail(e.target.value)}
               required
               disabled={loading}
+              autoComplete="email"
             />
           </div>
-
           <div className="input-group">
             <input
               type="password"
@@ -125,11 +68,11 @@ function Login() {
               onChange={(e) => setPassword(e.target.value)}
               required
               disabled={loading}
+              autoComplete="current-password"
             />
           </div>
-
           <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "Logging in…" : "Login"}
           </button>
         </form>
 
@@ -143,7 +86,7 @@ function Login() {
           onClick={handleGoogleLogin}
           disabled={loading}
         >
-          {loading ? "Signing in..." : "Continue with Google"}
+          {loading ? "Signing in…" : "Continue with Google"}
         </button>
 
         <div className="forgot-password">
@@ -153,8 +96,7 @@ function Login() {
 
       <div className="auth-box signup-link">
         <p>
-          Don't have an account?
-          <Link to="/register"> Sign up</Link>
+          Don't have an account? <Link to="/register">Sign up</Link>
         </p>
       </div>
     </div>

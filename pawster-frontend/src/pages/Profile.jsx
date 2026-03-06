@@ -1,199 +1,213 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  fetchProfileByUid,
+  fetchAllUsers,
+  followUser,
+  unfollowUser,
+  updateProfile,
+} from "../services/api";
 import "../styles/profile.css";
 
 const BASE_API_URL = "https://pawster-pi.vercel.app";
-const USER_API_URL = `${BASE_API_URL}/api/users`;
 
+// ─── Edit Modal ──────────────────────────────────────────────────────────────
+function EditModal({ profileData, onSave, onClose }) {
+  const [username, setUsername] = useState(profileData.username || "");
+  const [bio, setBio] = useState(profileData.bio || "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSave = async () => {
+    if (!username.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({ username: username.trim(), bio: bio.trim() });
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to update profile.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <h2 className="modal-title">Edit Profile</h2>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <div className="modal-field">
+          <label htmlFor="edit-username">Username</label>
+          <input
+            id="edit-username"
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            disabled={saving}
+          />
+        </div>
+
+        <div className="modal-field">
+          <label htmlFor="edit-bio">Bio</label>
+          <textarea
+            id="edit-bio"
+            value={bio}
+            onChange={(e) => setBio(e.target.value)}
+            rows={3}
+            disabled={saving}
+            placeholder="Tell the world about your pet…"
+          />
+        </div>
+
+        <div className="modal-actions">
+          <button
+            className="modal-btn-cancel"
+            onClick={onClose}
+            disabled={saving}
+          >
+            Cancel
+          </button>
+          <button
+            className="modal-btn-save"
+            onClick={handleSave}
+            disabled={saving || !username.trim()}
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
 function Profile({ user }) {
   const { username } = useParams();
   const navigate = useNavigate();
 
   const [profileData, setProfileData] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [currentUserMongoId, setCurrentUserMongoId] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [currentUserMongoId, setCurrentUserMongoId] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [error, setError] = useState("");
 
+  // Get logged-in user's Mongo ID once
   useEffect(() => {
     if (!user) return;
-    fetchCurrentUserMongoId();
+    (async () => {
+      try {
+        const data = await fetchProfileByUid(user, user.uid);
+        setCurrentUserMongoId(data.user._id);
+      } catch (err) {
+        console.error("Error fetching current user mongo ID:", err);
+      }
+    })();
   }, [user]);
 
-  useEffect(() => {
-    if (!user || !currentUserMongoId) return;
+  const loadProfile = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    setError("");
+    try {
+      if (!username) {
+        // Own profile
+        const data = await fetchProfileByUid(user, user.uid);
+        setProfileData(data.user);
+        setPosts(data.posts || []);
+        setIsFollowing(false);
+      } else {
+        // Another user's profile — look them up by username
+        const allUsers = await fetchAllUsers();
+        const found = allUsers.find((u) => u.username === username);
+        if (!found) {
+          setProfileData(null);
+          setLoading(false);
+          return;
+        }
+        const data = await fetchProfileByUid(user, found.firebaseId);
+        setProfileData(data.user);
+        setPosts(data.posts || []);
 
-    if (username) {
-      fetchProfileByUsername(username);
-    } else {
-      fetchOwnProfile();
+        // Determine follow state
+        const followerIds = (data.user.followers || []).map((f) =>
+          typeof f === "string" ? f : f._id?.toString() || String(f),
+        );
+        setIsFollowing(followerIds.includes(currentUserMongoId));
+      }
+    } catch (err) {
+      console.error("Profile load error:", err);
+      setError("Could not load profile.");
+    } finally {
+      setLoading(false);
     }
   }, [user, username, currentUserMongoId]);
 
-  const fetchCurrentUserMongoId = async () => {
-    try {
-      const token = await user.getIdToken();
-      const res = await fetch(`${USER_API_URL}/uid/${user.uid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setCurrentUserMongoId(data.user._id);
-    } catch (err) {
-      console.error("Error fetching current user:", err);
+  useEffect(() => {
+    // Only load after we have currentUserMongoId (or it's own profile)
+    if (!username || currentUserMongoId) {
+      loadProfile();
     }
-  };
-
-  const fetchOwnProfile = async () => {
-    try {
-      setLoading(true);
-      const token = await user.getIdToken();
-
-      const res = await fetch(`${USER_API_URL}/uid/${user.uid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const data = await res.json();
-      setProfileData(data.user);
-      setPosts(data.posts);
-      setIsFollowing(false);
-    } catch (err) {
-      console.error("Profile fetch error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProfileByUsername = async (targetUsername) => {
-    try {
-      setLoading(true);
-
-      const usersRes = await fetch(`${USER_API_URL}`);
-      const allUsers = await usersRes.json();
-
-      const foundUser = allUsers.find((u) => u.username === targetUsername);
-
-      if (!foundUser) {
-        setLoading(false);
-        return;
-      }
-
-      const token = await user.getIdToken();
-      const profileRes = await fetch(
-        `${USER_API_URL}/uid/${foundUser.firebaseId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
-
-      const data = await profileRes.json();
-      setProfileData(data.user);
-      setPosts(data.posts);
-
-      const followerIds = data.user.followers.map((f) => {
-        return typeof f === "string" ? f : f._id?.toString() || f.toString();
-      });
-
-      const isUserFollowing = followerIds.includes(currentUserMongoId);
-      setIsFollowing(isUserFollowing);
-    } catch (err) {
-      console.error("Profile fetch error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadProfile, username, currentUserMongoId]);
 
   const handleFollowToggle = async () => {
     if (!profileData || !currentUserMongoId) return;
-
     try {
-      const token = await user.getIdToken();
-      const action = isFollowing ? "unfollow" : "follow";
-
-      const response = await fetch(
-        `${USER_API_URL}/${action}/${profileData._id}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ currentUserId: user.uid }),
-        },
-      );
-
-      if (response.ok) {
-        setIsFollowing(!isFollowing);
-
-        setProfileData((prev) => ({
-          ...prev,
-          followers: isFollowing
-            ? prev.followers.filter((f) => {
-                const fId =
-                  typeof f === "string" ? f : f._id?.toString() || f.toString();
-                return fId !== currentUserMongoId;
-              })
-            : [...prev.followers, currentUserMongoId],
-        }));
+      if (isFollowing) {
+        await unfollowUser(user, profileData._id);
+      } else {
+        await followUser(user, profileData._id);
       }
+      setIsFollowing((prev) => !prev);
+      setProfileData((prev) => ({
+        ...prev,
+        followers: isFollowing
+          ? (prev.followers || []).filter((f) => {
+              const id =
+                typeof f === "string" ? f : f._id?.toString() || String(f);
+              return id !== currentUserMongoId;
+            })
+          : [...(prev.followers || []), currentUserMongoId],
+      }));
     } catch (err) {
       console.error("Follow toggle error:", err);
     }
   };
 
-  const handleEditProfile = async () => {
-    const newUsername = prompt("Enter new Username:", profileData.username);
-    const newBio = prompt("Enter new Bio:", profileData.bio || "");
-
-    if (!newUsername) return;
-
-    try {
-      const token = await user.getIdToken();
-
-      const res = await fetch(`${USER_API_URL}/edit/${user.uid}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ username: newUsername, bio: newBio }),
-      });
-
-      const updated = await res.json();
-
-      setProfileData((prev) => ({
-        ...prev,
-        username: updated.username,
-        bio: updated.bio,
-      }));
-    } catch (err) {
-      console.error("Edit profile error:", err);
-    }
+  const handleSaveProfile = async (data) => {
+    const updated = await updateProfile(user, data);
+    setProfileData((prev) => ({ ...prev, ...updated }));
   };
 
-  if (!user) {
+  // ─── Render states ────────────────────────────────────────────────────────
+
+  if (!user)
     return (
       <div className="profile-main">
-        <p>Please login</p>
+        <p>Please log in.</p>
       </div>
     );
-  }
 
   if (loading) {
     return (
       <div className="profile-main">
         <div className="profile-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading profile...</p>
+          <div className="loading-spinner" />
+          <p>Loading profile…</p>
         </div>
       </div>
     );
   }
 
-  if (!profileData) {
+  if (error || !profileData) {
     return (
       <div className="profile-main">
         <div className="profile-not-found">
-          <h2>User not found</h2>
+          <h2>{error || "User not found"}</h2>
           <button onClick={() => navigate("/feed")}>Go back to feed</button>
         </div>
       </div>
@@ -204,7 +218,16 @@ function Profile({ user }) {
 
   return (
     <main className="profile-main">
+      {showEditModal && (
+        <EditModal
+          profileData={profileData}
+          onSave={handleSaveProfile}
+          onClose={() => setShowEditModal(false)}
+        />
+      )}
+
       <div className="profile-container">
+        {/* Header */}
         <div className="profile-header">
           <div className="profile-image-container">
             <div className="profile-image-placeholder">
@@ -219,9 +242,9 @@ function Profile({ user }) {
               {isOwnProfile ? (
                 <button
                   className="edit-profile-btn"
-                  onClick={handleEditProfile}
+                  onClick={() => setShowEditModal(true)}
                 >
-                  Edit profile
+                  Edit Profile
                 </button>
               ) : (
                 <button
@@ -239,7 +262,6 @@ function Profile({ user }) {
                 <strong>{posts.length}</strong>
                 <span>{posts.length === 1 ? "post" : "posts"}</span>
               </div>
-
               <div className="stat-item">
                 <strong>{profileData.followers?.length || 0}</strong>
                 <span>
@@ -248,7 +270,6 @@ function Profile({ user }) {
                     : "followers"}
                 </span>
               </div>
-
               <div className="stat-item">
                 <strong>{profileData.following?.length || 0}</strong>
                 <span>following</span>
@@ -266,6 +287,7 @@ function Profile({ user }) {
           </div>
         </div>
 
+        {/* Posts grid */}
         <div className="profile-posts">
           <div className="posts-header">
             <div className="posts-tab active">📷 POSTS</div>
@@ -284,18 +306,17 @@ function Profile({ user }) {
           ) : (
             <div className="posts-grid">
               {posts.map((post) => {
-                const imageSrc = post.imageUrl?.startsWith("http")
+                const src = post.imageUrl?.startsWith("http")
                   ? post.imageUrl
                   : `${BASE_API_URL}/${post.imageUrl}`;
-
                 return (
                   <div key={post._id} className="post-grid-item">
                     <img
-                      src={imageSrc}
-                      alt={post.caption}
+                      src={src}
+                      alt={post.caption || "Post"}
                       className="post-img"
+                      loading="lazy"
                     />
-
                     <div className="post-overlay">
                       <div className="overlay-stat">
                         <span>❤️</span>
