@@ -24,7 +24,7 @@ const corsOptions = {
       "https://pawster-tndx.vercel.app",
     ];
 
-    // Allow any Vercel preview deployment URL
+    // Allow any Vercel preview deployment URL for pawster
     const isVercelPreview =
       origin.includes("pawster-") && origin.includes("vercel.app");
 
@@ -43,5 +43,16 @@ app.use(cors(corsOptions));
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+
+// Health check route
+app.get("/", (req, res) => {
+  res.json({ status: "Pawster API is running 🐾" });
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
 module.exports = app;
