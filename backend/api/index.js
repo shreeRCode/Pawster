@@ -21,7 +21,7 @@ const corsOptions = {
     const allowedOrigins = [
       "http://localhost:5173",
       "http://localhost:3000",
-      "https://pawster-2rfz.vercel.app",
+      "https://pawster-tndx.vercel.app",
     ];
 
     // Allow any Vercel preview deployment URL
