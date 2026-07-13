@@ -1,0 +1,5 @@
+# Backend-specific ignores (root .gitignore also applies)
+node_modules/
+.env
+config/firebase-service-account.json
+*.log

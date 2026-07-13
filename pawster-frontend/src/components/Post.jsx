@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { likePost, addComment } from "../services/api";
 
@@ -12,6 +12,7 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
     !!(currentUserMongoId && post.likes?.includes(currentUserMongoId)),
   );
   const [submitting, setSubmitting] = useState(false);
+  const commentInputRef = useRef(null);
 
   useEffect(() => {
     setLikes(post.likes || []);
@@ -102,11 +103,12 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
         >
           {isLiked ? "❤️" : "🤍"}
         </button>
-        <button className="post-action-btn" aria-label="Comment">
+        <button
+          className="post-action-btn"
+          aria-label="Comment"
+          onClick={() => commentInputRef.current?.focus()}
+        >
           💬
-        </button>
-        <button className="post-action-btn" aria-label="Share">
-          📤
         </button>
       </div>
 
@@ -138,6 +140,7 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
       {user && (
         <div className="add-comment-section">
           <input
+            ref={commentInputRef}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
             onKeyDown={handleKeyDown}

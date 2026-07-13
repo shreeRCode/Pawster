@@ -1,7 +1,4 @@
-import { useEffect, useState, useRef } from "react";
-import * as tf from "@tensorflow/tfjs";
-import "@tensorflow/tfjs-backend-webgl";
-import * as mobilenet from "@tensorflow-models/mobilenet";
+import { useState, useRef } from "react";
 import { createPost } from "../services/api";
 
 const DOG_INDICATORS = [
@@ -61,17 +58,27 @@ const DOG_INDICATORS = [
   "weimaraner",
 ];
 
+// MobileNet returns its top guesses sorted by confidence. We accept an image
+// only when the single most-confident guess is a dog breed AND that guess
+// clears a real confidence bar. The previous logic accepted *any* top guess
+// above 10%, which let non-dog images (e.g. a person) pass on a weak dog
+// match buried lower in the results.
+const DOG_CONFIDENCE_THRESHOLD = 0.4;
+
+function isDogLabel(className) {
+  const label = className.toLowerCase();
+  return DOG_INDICATORS.some((word) => label.includes(word));
+}
+
 function isDogImage(predictions) {
-  return predictions.some(
-    (p) =>
-      p.probability > 0.1 &&
-      DOG_INDICATORS.some((word) => p.className.toLowerCase().includes(word)),
+  if (!predictions || predictions.length === 0) return false;
+  const top = predictions[0];
+  return (
+    top.probability >= DOG_CONFIDENCE_THRESHOLD && isDogLabel(top.className)
   );
 }
 
 function Upload({ user, onPostUploaded }) {
-  const [model, setModel] = useState(null);
-  const [modelLoading, setModelLoading] = useState(true);
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [caption, setCaption] = useState("");
@@ -79,20 +86,21 @@ function Upload({ user, onPostUploaded }) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const imageRef = useRef();
+  const modelRef = useRef(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        await tf.ready();
-        const loaded = await mobilenet.load();
-        setModel(loaded);
-      } catch (err) {
-        console.error("Model load error:", err);
-      } finally {
-        setModelLoading(false);
-      }
-    })();
-  }, []);
+  // Lazy-load TensorFlow.js + MobileNet only when the user actually picks an
+  // image. Using dynamic import() code-splits this ~1.4MB of JS into its own
+  // chunk, so it's downloaded on first upload instead of bloating the initial
+  // Feed bundle. Cached in a ref so it loads at most once per session.
+  const loadModel = async () => {
+    if (modelRef.current) return modelRef.current;
+    const tf = await import("@tensorflow/tfjs");
+    await import("@tensorflow/tfjs-backend-webgl");
+    const mobilenet = await import("@tensorflow-models/mobilenet");
+    await tf.ready();
+    modelRef.current = await mobilenet.load();
+    return modelRef.current;
+  };
 
   const handleImageChange = async (e) => {
     const selected = e.target.files[0];
@@ -109,9 +117,11 @@ function Upload({ user, onPostUploaded }) {
       img.src = ev.target.result;
       img.onload = async () => {
         try {
+          const model = await loadModel();
           const predictions = await model.classify(img);
           setValidationState(isDogImage(predictions) ? "valid" : "invalid");
-        } catch {
+        } catch (err) {
+          console.error("Classification error:", err);
           setValidationState("invalid");
         }
       };
@@ -153,7 +163,7 @@ function Upload({ user, onPostUploaded }) {
           {user.email?.charAt(0).toUpperCase()}
         </div>
         <label className="upload-file-label" htmlFor="file-input">
-          {modelLoading ? "⏳ Loading AI model…" : "Share a dog moment…"}
+          Share a dog moment…
         </label>
       </div>
 
@@ -162,7 +172,7 @@ function Upload({ user, onPostUploaded }) {
         type="file"
         accept="image/*"
         onChange={handleImageChange}
-        disabled={modelLoading || !model || validationState === "classifying"}
+        disabled={validationState === "classifying"}
       />
 
       {preview && (

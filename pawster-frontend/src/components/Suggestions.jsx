@@ -87,11 +87,6 @@ function Suggestions({ user }) {
 
       <footer className="sidebar-footer">
         <p>© 2025 Pawster</p>
-        <div className="footer-links">
-          <a href="#">About</a>
-          <a href="#">Help</a>
-          <a href="#">Terms</a>
-        </div>
       </footer>
     </aside>
   );

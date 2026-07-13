@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const Post = require("../models/Post");
+const { verifyToken } = require("../middleware/auth");
 
 // =====================================
 // Get all users (basic listing)
@@ -23,23 +24,17 @@ router.get("/", async (req, res) => {
 // =====================================
 // Get user profile + posts (AUTO CREATE IF MISSING)
 // =====================================
-router.get("/uid/:uid", async (req, res) => {
+router.get("/uid/:uid", verifyToken, async (req, res) => {
   try {
-    let user = await User.findOne({ firebaseId: req.params.uid })
+    const user = await User.findOne({ firebaseId: req.params.uid })
       .populate("followers", "username name")
       .populate("following", "username name");
 
-    // ✅ FIX: Auto-create Mongo user if not found
+    // Read-only route: the current user is guaranteed to exist (verifyToken
+    // creates it). A missing user here means a genuine 404 — we no longer
+    // create records as a side effect of a GET request.
     if (!user) {
-      user = await User.create({
-        firebaseId: req.params.uid,
-        username: "user_" + req.params.uid.slice(0, 5),
-        name: "",
-        bio: "",
-        profileImage: "",
-        followers: [],
-        following: [],
-      });
+      return res.status(404).json({ message: "User not found" });
     }
 
     const posts = await Post.find({ user: user._id }).sort({
@@ -68,17 +63,15 @@ router.get("/uid/:uid", async (req, res) => {
 // =====================================
 // Edit profile
 // =====================================
-router.put("/edit/:uid", async (req, res) => {
+router.put("/edit/:uid", verifyToken, async (req, res) => {
   try {
     const { username, bio } = req.body;
 
-    let user = await User.findOne({ firebaseId: req.params.uid });
+    // Authorization: edit only the authenticated user's own profile
+    // (derived from the verified token), never an arbitrary :uid.
+    const user = req.user;
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    if (username && username.trim()) user.username = username;
+    if (username && username.trim()) user.username = username.trim();
     if (bio !== undefined) user.bio = bio;
 
     await user.save();
@@ -93,23 +86,20 @@ router.put("/edit/:uid", async (req, res) => {
 // =====================================
 // Follow
 // =====================================
-router.post("/follow/:id", async (req, res) => {
+router.post("/follow/:id", verifyToken, async (req, res) => {
   try {
-    const { currentUserId } = req.body;
+    // The follower is always the authenticated user, from the token.
+    const currentUser = req.user;
 
-    if (req.params.id === currentUserId) {
+    const userToFollow = await User.findById(req.params.id);
+    if (!userToFollow) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (userToFollow._id.equals(currentUser._id)) {
       return res.status(400).json({
         message: "You cannot follow yourself",
       });
-    }
-
-    const userToFollow = await User.findById(req.params.id);
-    const currentUser = await User.findOne({
-      firebaseId: currentUserId,
-    });
-
-    if (!userToFollow || !currentUser) {
-      return res.status(404).json({ message: "User not found" });
     }
 
     if (!userToFollow.followers.includes(currentUser._id)) {
@@ -131,16 +121,13 @@ router.post("/follow/:id", async (req, res) => {
 // =====================================
 // Unfollow
 // =====================================
-router.post("/unfollow/:id", async (req, res) => {
+router.post("/unfollow/:id", verifyToken, async (req, res) => {
   try {
-    const { currentUserId } = req.body;
+    // The actor is always the authenticated user, from the token.
+    const currentUser = req.user;
 
     const userToUnfollow = await User.findById(req.params.id);
-    const currentUser = await User.findOne({
-      firebaseId: currentUserId,
-    });
-
-    if (!userToUnfollow || !currentUser) {
+    if (!userToUnfollow) {
       return res.status(404).json({ message: "User not found" });
     }
 
@@ -166,18 +153,14 @@ router.post("/unfollow/:id", async (req, res) => {
 // =====================================
 router.get("/suggestions/:uid", async (req, res) => {
   try {
-    let currentUser = await User.findOne({
+    const currentUser = await User.findOne({
       firebaseId: req.params.uid,
     }).populate("following");
 
-    // ✅ FIX: Auto-create user if missing
+    // Read-only: if the user doesn't exist yet, return no suggestions
+    // rather than creating a record as a side effect of a GET.
     if (!currentUser) {
-      currentUser = await User.create({
-        firebaseId: req.params.uid,
-        username: "user_" + req.params.uid.slice(0, 5),
-        followers: [],
-        following: [],
-      });
+      return res.json([]);
     }
 
     const followingIds = currentUser.following.map((f) => f._id.toString());

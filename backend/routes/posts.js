@@ -75,6 +75,9 @@ router.post("/", verifyToken, upload.single("image"), async (req, res) => {
 router.put("/:id/like", verifyToken, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
+    if (!post) {
+      return res.status(404).json({ error: "Post not found" });
+    }
     const userId = req.user._id;
     if (post.likes.includes(userId)) {
       post.likes.pull(userId);

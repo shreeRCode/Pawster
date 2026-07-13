@@ -35,20 +35,6 @@ function Landing() {
               </a>
             </div>
 
-            <div className="hero-stats">
-              <div className="stat-item">
-                <span className="stat-number">10K+</span>
-                <span className="stat-label">Happy Pets</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">5K+</span>
-                <span className="stat-label">Pet Parents</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">50K+</span>
-                <span className="stat-label">Moments Shared</span>
-              </div>
-            </div>
           </div>
 
           <div className="hero-right">
@@ -189,44 +175,10 @@ function Landing() {
             <h3 className="footer-logo">🐾 Pawster</h3>
             <p>Where pets meet their people</p>
           </div>
-
-          <div className="footer-links">
-            <div className="footer-column">
-              <h4>Product</h4>
-              <a href="#features">Features</a>
-              <a href="#about">About</a>
-              <a href="#contact">Contact</a>
-            </div>
-
-            <div className="footer-column">
-              <h4>Community</h4>
-              <a href="#guidelines">Guidelines</a>
-              <a href="#support">Support</a>
-              <a href="#blog">Blog</a>
-            </div>
-
-            <div className="footer-column">
-              <h4>Legal</h4>
-              <a href="#privacy">Privacy</a>
-              <a href="#terms">Terms</a>
-              <a href="#cookies">Cookies</a>
-            </div>
-          </div>
         </div>
 
         <div className="footer-bottom">
           <p>© 2025 Pawster. Made with ❤️ for pets and their humans.</p>
-          <div className="footer-social">
-            <a href="#" aria-label="Instagram">
-              📷
-            </a>
-            <a href="#" aria-label="Twitter">
-              🐦
-            </a>
-            <a href="#" aria-label="Facebook">
-              👥
-            </a>
-          </div>
         </div>
       </footer>
     </div>
