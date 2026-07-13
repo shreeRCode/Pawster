@@ -1,8 +1,8 @@
-# 🐾 Pawster
+# Pawster
 
-A full-stack social platform where dog owners share moments, follow other pet
+A full-stack social platform where pet owners share moments, follow other pet
 parents, and interact through likes and comments. Uploads are gated by an
-**in-browser AI filter** that only lets genuine dog photos through.
+**in-browser AI filter** that only lets genuine pet photos (dogs and cats) through.
 
 **Live demo:** [pawster-tndx.vercel.app](https://pawster-tndx.vercel.app) &nbsp;·&nbsp; **API:** [pawster-pi.vercel.app](https://pawster-pi.vercel.app)
 
@@ -11,11 +11,11 @@ parents, and interact through likes and comments. Uploads are gated by an
 ![Node.js](https://img.shields.io/badge/Node.js-Express_5-339933?logo=node.js&logoColor=white)
 ![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)
 ![Firebase](https://img.shields.io/badge/Firebase-Auth-FFCA28?logo=firebase&logoColor=black)
-![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-MobileNet-FF6F00?logo=tensorflow&logoColor=white)
+![TensorFlow.js](https://img.shields.io/badge/TensorFlow.js-COCO--SSD-FF6F00?logo=tensorflow&logoColor=white)
 
 ---
 
-## ✨ Features
+## Features
 
 - **Authentication** — email/password and Google sign-in via Firebase, with
   email verification and password reset.
@@ -28,7 +28,7 @@ parents, and interact through likes and comments. Uploads are gated by an
 - **Engagement** — like posts (optimistic UI) and comment in real time.
 - **Profiles** — editable bio/username, follower/following counts, and a post grid.
 
-## 🧱 Tech Stack
+## Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -40,7 +40,7 @@ parents, and interact through likes and comments. Uploads are gated by an
 | Machine learning | TensorFlow.js + COCO-SSD (client-side object detection) |
 | Hosting | Vercel (frontend + serverless API) |
 
-## 🏗️ Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -51,25 +51,24 @@ flowchart LR
     API -->|read/write| DB[(MongoDB)]
     U -->|image upload| API
     API -->|store image| CLD[Cloudinary]
-    U -.->|classify in-browser| TF[TensorFlow.js<br/>MobileNet]
+    U -.->|detect pet in-browser| TF[TensorFlow.js<br/>COCO-SSD]
 ```
 
 The React app authenticates with Firebase and attaches the resulting ID token to
 API calls. The Express backend verifies each token with the Firebase Admin SDK,
 mirrors the user into MongoDB, and persists posts, likes, comments and the follow
 graph. Images never touch the database — they are uploaded straight to Cloudinary.
-Image classification runs entirely in the browser, so no image data is sent to a
-server for the "is this a dog?" check.
+Pet detection runs entirely in the browser, so no image data is sent to a server
+for the "is this a pet?" check.
 
-## 🗄️ Data Model
+## Data Model
 
 ```mermaid
 erDiagram
     USER ||--o{ POST : "creates"
     USER ||--o{ COMMENT : "writes"
-    POST ||--o{ COMMENT : "has (embedded)"
+    POST ||--o{ COMMENT : "contains (embedded)"
     USER }o--o{ POST : "likes (M:N)"
-    USER }o--o{ USER : "follows (M:N, self-ref)"
 
     USER {
         ObjectId _id PK
@@ -103,12 +102,14 @@ erDiagram
 **Design notes:**
 - **Comments are embedded** as a subdocument array inside each `Post` — reads are
   fast (one document fetch) and comment volume per post is naturally bounded.
-- **Likes and follows are modelled as arrays of ObjectId references** (many-to-many),
-  keeping membership checks and toggles simple.
+- **Likes** are an array of user references on `Post` (a many-to-many between
+  users and posts).
+- **Follows** are modelled as a self-referential many-to-many on `User`: each user
+  document holds a `followers` array and a `following` array of user references.
 - There is no separate `Pet` collection — a "pet" is represented by the uploaded
   image. Adding a first-class `Pet` entity is a possible future enhancement.
 
-## 📸 Screenshots
+## Screenshots
 
 > _Add screenshots to `docs/screenshots/` and reference them here._
 
@@ -118,7 +119,7 @@ erDiagram
 ![Profile](docs/screenshots/profile.png)
 -->
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Node.js 18+
@@ -148,7 +149,7 @@ cp .env.example .env      # then fill in real values
 npm run dev               # starts on http://localhost:5173
 ```
 
-## 🔐 Environment Variables
+## Environment Variables
 
 Never commit real `.env` files — commit only `.env.example`. See each app's
 `.env.example` for the full list.
@@ -166,6 +167,7 @@ Never commit real `.env` files — commit only `.env.example`. See each app's
 
 | Variable | Description |
 |---|---|
+| `VITE_API_URL` | Backend API base URL (defaults to the deployed API if unset) |
 | `VITE_FIREBASE_API_KEY` | Firebase web API key |
 | `VITE_FIREBASE_AUTH_DOMAIN` | Firebase auth domain |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
@@ -174,33 +176,35 @@ Never commit real `.env` files — commit only `.env.example`. See each app's
 | `VITE_FIREBASE_APP_ID` | Firebase app ID |
 | `VITE_FIREBASE_MEASUREMENT_ID` | Firebase analytics measurement ID |
 
-## 📡 API Reference
+## API Reference
 
-Base URL: `/api`. Routes marked 🔒 require a Firebase ID token
+Base URL: `/api`. Routes marked **Yes** under Auth require a Firebase ID token
 (`Authorization: Bearer <token>`).
 
 **Posts**
 
 | Method | Endpoint | Auth | Description |
 |---|---|:--:|---|
-| GET | `/api/posts` | | List all posts (newest first) |
-| POST | `/api/posts` | 🔒 | Create a post (`multipart/form-data`: `image`, `caption`) |
-| PUT | `/api/posts/:id/like` | 🔒 | Toggle like on a post |
-| POST | `/api/posts/:id/comments` | 🔒 | Add a comment (`{ text }`) |
+| GET | `/api/posts` | — | List posts (paginated: `?page`, `?limit`) |
+| POST | `/api/posts` | Yes | Create a post (`multipart/form-data`: `image`, `caption`) |
+| PUT | `/api/posts/:id/like` | Yes | Toggle like on a post |
+| POST | `/api/posts/:id/comments` | Yes | Add a comment (`{ text }`) |
+| DELETE | `/api/posts/:id` | Yes | Delete your own post |
+| DELETE | `/api/posts/:id/comments/:commentId` | Yes | Delete your own comment |
 
 **Users**
 
 | Method | Endpoint | Auth | Description |
 |---|---|:--:|---|
-| GET | `/api/users` | | List users |
-| GET | `/api/users/uid/:uid` | 🔒 | Get a user's profile + posts |
-| PUT | `/api/users/edit/:uid` | 🔒 | Edit the authenticated user's profile |
-| POST | `/api/users/follow/:id` | 🔒 | Follow a user |
-| POST | `/api/users/unfollow/:id` | 🔒 | Unfollow a user |
-| GET | `/api/users/suggestions/:uid` | | Get suggested users to follow |
-| POST | `/api/users/sync` | | Create/sync the MongoDB user record on login |
+| GET | `/api/users` | — | List users |
+| GET | `/api/users/uid/:uid` | Yes | Get a user's profile + posts |
+| PUT | `/api/users/edit/:uid` | Yes | Edit the authenticated user's profile |
+| POST | `/api/users/follow/:id` | Yes | Follow a user |
+| POST | `/api/users/unfollow/:id` | Yes | Unfollow a user |
+| GET | `/api/users/suggestions/:uid` | — | Get suggested users to follow |
+| POST | `/api/users/sync` | — | Create/sync the MongoDB user record on login |
 
-## 🤖 AI Image Filter
+## AI Image Filter
 
 When a user selects an image, the app lazy-loads **COCO-SSD** (an object-detection
 model) via TensorFlow.js and runs it directly in the browser. Unlike a whole-image
@@ -210,14 +214,15 @@ detected above a confidence threshold — a photo containing only a person is
 correctly rejected. TensorFlow.js and the model are code-split into their own
 bundle chunk, so they are downloaded only the first time a user uploads.
 
-## 📦 Deployment
+## Deployment
 
 - **Frontend** is deployed on Vercel from `pawster-frontend/` (Vite static build).
   `vercel.json` rewrites all routes to `index.html` for client-side routing.
-- **Backend** is deployed on Vercel as a serverless function (`backend/api/index.js`).
+- **Backend** is deployed on Vercel as a serverless function (`backend/api/index.js`);
+  its `vercel.json` routes all requests to the Express app.
 - Environment variables are configured in the Vercel dashboard for each project.
 
-## 🛣️ Roadmap
+## Roadmap
 
 - [ ] Cursor-based pagination + infinite scroll (currently offset "load more")
 - [ ] Direct messages / notifications
@@ -225,6 +230,6 @@ bundle chunk, so they are downloaded only the first time a user uploads.
 - [ ] Delete the Cloudinary image when a post is deleted
 - [ ] A dedicated `Pet` entity (breed, age) beyond the photo
 
-## 👩‍💻 Author
+## Author
 
 Built by [@shreeRCode](https://github.com/shreeRCode).
