@@ -45,3 +45,11 @@ img {
 .clickable:hover {
   opacity: 0.7;
 }
+
+/* Visible keyboard-focus indicator. :focus-visible only shows for keyboard
+   navigation, so mouse clicks stay clean. */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

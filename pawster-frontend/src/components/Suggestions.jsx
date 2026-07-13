@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchSuggestions, followUser } from "../services/api";
+import { keyActivate } from "../utils/a11y";
 
 function Suggestions({ user }) {
   const navigate = useNavigate();
@@ -58,14 +59,23 @@ function Suggestions({ user }) {
               <div key={s._id} className="suggestion-item">
                 <div
                   className="suggestion-avatar clickable"
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View ${s.username}'s profile`}
                   onClick={() => navigate(`/profile/${s.username}`)}
+                  onKeyDown={keyActivate(() => navigate(`/profile/${s.username}`))}
                 >
                   {s.username?.charAt(0).toUpperCase()}
                 </div>
                 <div className="suggestion-info">
                   <span
                     className="suggestion-username clickable"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => navigate(`/profile/${s.username}`)}
+                    onKeyDown={keyActivate(() =>
+                      navigate(`/profile/${s.username}`),
+                    )}
                   >
                     {s.username}
                   </span>

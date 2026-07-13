@@ -508,7 +508,7 @@
   text-align: center;
 }
 .sidebar-footer p {
-  color: var(--gray-400);
+  color: var(--text-muted);
   font-size: 12px;
   margin-bottom: 8px;
 }
@@ -520,7 +520,7 @@
   flex-wrap: wrap;
 }
 .footer-links a {
-  color: var(--gray-400);
+  color: var(--text-muted);
   font-size: 12px;
   transition: color var(--transition);
 }

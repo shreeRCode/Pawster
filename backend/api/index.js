@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 const connectDB = require("../config/db");
@@ -8,7 +10,20 @@ const userRoutes = require("../routes/users");
 
 const app = express();
 
+// Behind Vercel's proxy, trust the first hop so req.ip and the rate limiter
+// use the real client IP from the X-Forwarded-For header.
+app.set("trust proxy", 1);
+
 connectDB();
+
+// Security: set sensible HTTP response headers (X-Content-Type-Options,
+// Strict-Transport-Security, X-Frame-Options, etc.). The API is consumed by a
+// separate frontend origin, so allow cross-origin resource access.
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  }),
+);
 
 app.use(express.json());
 
@@ -40,6 +55,17 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Rate limiting: cap requests per IP to blunt brute-force / abuse.
+// Note: the default in-memory store is per serverless instance; a real
+// distributed deploy would use a shared store (e.g. Redis).
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 300, // requests per IP per window
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use("/api", apiLimiter);
 
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);

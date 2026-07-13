@@ -9,6 +9,7 @@ import {
 } from "../services/api";
 import { API_BASE_URL as BASE_API_URL } from "../config";
 import { timeAgo } from "../utils/time";
+import { keyActivate } from "../utils/a11y";
 
 function Post({ post, user, currentUserMongoId, onPostDeleted }) {
   const navigate = useNavigate();
@@ -112,14 +113,21 @@ function Post({ post, user, currentUserMongoId, onPostDeleted }) {
         <div className="post-user-info">
           <div
             className="post-avatar clickable"
+            role="button"
+            tabIndex={0}
+            aria-label={`View ${username}'s profile`}
             onClick={() => navigate(`/profile/${username}`)}
+            onKeyDown={keyActivate(() => navigate(`/profile/${username}`))}
           >
             {username.charAt(0).toUpperCase()}
           </div>
           <div>
             <span
               className="post-username clickable"
+              role="button"
+              tabIndex={0}
               onClick={() => navigate(`/profile/${username}`)}
+              onKeyDown={keyActivate(() => navigate(`/profile/${username}`))}
             >
               {username}
             </span>

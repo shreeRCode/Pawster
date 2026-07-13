@@ -19,9 +19,11 @@ parents, and interact through likes and comments. Uploads are gated by an
 
 - **Authentication** — email/password and Google sign-in via Firebase, with
   email verification and password reset.
-- **Posts** — upload a dog photo with a caption; images are stored on Cloudinary.
-- **AI image filter** — a MobileNet model runs in the browser and only allows a
-  post if the image is confidently classified as a dog.
+- **Posts** — upload a pet photo with a caption; images are stored on Cloudinary.
+- **AI image filter** — a COCO-SSD object-detection model runs in the browser and
+  only allows a post when it detects a dog or cat (rejecting, e.g., people).
+- **Hardened API** — Firebase token verification on protected routes, `helmet`
+  security headers, and per-IP rate limiting.
 - **Social graph** — follow / unfollow other users, with suggested accounts.
 - **Engagement** — like posts (optimistic UI) and comment in real time.
 - **Profiles** — editable bio/username, follower/following counts, and a post grid.
@@ -35,7 +37,7 @@ parents, and interact through likes and comments. Uploads are gated by an
 | Database | MongoDB (Mongoose ODM) |
 | Auth | Firebase Authentication (client) + Firebase Admin (server verification) |
 | Image storage | Cloudinary (via Multer) |
-| Machine learning | TensorFlow.js + MobileNet (client-side classification) |
+| Machine learning | TensorFlow.js + COCO-SSD (client-side object detection) |
 | Hosting | Vercel (frontend + serverless API) |
 
 ## 🏗️ Architecture
@@ -200,13 +202,13 @@ Base URL: `/api`. Routes marked 🔒 require a Firebase ID token
 
 ## 🤖 AI Image Filter
 
-When a user selects an image, the app lazy-loads **MobileNet** (a lightweight CNN
-pre-trained on ImageNet) via TensorFlow.js and classifies the image directly in
-the browser. A post is accepted only when the model's **single most confident
-prediction** is a dog breed **and** its confidence clears a threshold — this
-prevents non-dog images from slipping through on a weak, low-probability match.
-TensorFlow.js is code-split into its own bundle chunk, so it is only downloaded
-the first time a user uploads.
+When a user selects an image, the app lazy-loads **COCO-SSD** (an object-detection
+model) via TensorFlow.js and runs it directly in the browser. Unlike a whole-image
+classifier, COCO-SSD locates and labels individual objects (dog, cat, person, …)
+with confidence scores, so a post is accepted only when a **dog or cat** is
+detected above a confidence threshold — a photo containing only a person is
+correctly rejected. TensorFlow.js and the model are code-split into their own
+bundle chunk, so they are downloaded only the first time a user uploads.
 
 ## 📦 Deployment
 
@@ -217,12 +219,11 @@ the first time a user uploads.
 
 ## 🛣️ Roadmap
 
-- [ ] Feed pagination (cursor / "load more")
-- [ ] Delete own posts and comments
-- [ ] Broaden the AI filter to all pets (dogs + cats) using object detection
-- [ ] Rate limiting and security headers (`helmet`)
-- [ ] Accessibility pass (keyboard navigation, color contrast)
-- [ ] Post timestamps and richer profiles
+- [ ] Cursor-based pagination + infinite scroll (currently offset "load more")
+- [ ] Direct messages / notifications
+- [ ] Distributed rate-limit store (Redis) for multi-instance deployments
+- [ ] Delete the Cloudinary image when a post is deleted
+- [ ] A dedicated `Pet` entity (breed, age) beyond the photo
 
 ## 👩‍💻 Author
 

@@ -1,80 +1,18 @@
 import { useState, useRef } from "react";
 import { createPost } from "../services/api";
 
-const DOG_INDICATORS = [
-  "dog",
-  "puppy",
-  "hound",
-  "pug",
-  "retriever",
-  "terrier",
-  "shepherd",
-  "bulldog",
-  "beagle",
-  "poodle",
-  "corgi",
-  "husky",
-  "chihuahua",
-  "dachshund",
-  "labrador",
-  "spaniel",
-  "boxer",
-  "dalmatian",
-  "mastiff",
-  "collie",
-  "pointer",
-  "setter",
-  "schnauzer",
-  "pomeranian",
-  "rottweiler",
-  "doberman",
-  "basenji",
-  "whippet",
-  "borzoi",
-  "saluki",
-  "greyhound",
-  "wolfhound",
-  "deerhound",
-  "otterhound",
-  "bloodhound",
-  "kelpie",
-  "malinois",
-  "komondor",
-  "kuvasz",
-  "akita",
-  "shiba",
-  "chow",
-  "keeshond",
-  "pinscher",
-  "affenpinscher",
-  "groenendael",
-  "malamute",
-  "samoyed",
-  "spitz",
-  "schipperke",
-  "bouvier",
-  "briard",
-  "vizsla",
-  "weimaraner",
-];
+// COCO-SSD is an object *detector*: it finds individual objects in an image and
+// labels each one (dog, cat, person, …) with a confidence score. We accept an
+// upload when a dog or cat is detected above a confidence bar, and reject
+// everything else — so a photo of a person is correctly rejected. This fixes
+// the old false positives from whole-image classification (where a human could
+// pick up a weak "dog" label) and lets the app cover all pets, not just dogs.
+const PET_CLASSES = ["dog", "cat"];
+const PET_CONFIDENCE_THRESHOLD = 0.5;
 
-// MobileNet returns its top guesses sorted by confidence. We accept an image
-// only when the single most-confident guess is a dog breed AND that guess
-// clears a real confidence bar. The previous logic accepted *any* top guess
-// above 10%, which let non-dog images (e.g. a person) pass on a weak dog
-// match buried lower in the results.
-const DOG_CONFIDENCE_THRESHOLD = 0.4;
-
-function isDogLabel(className) {
-  const label = className.toLowerCase();
-  return DOG_INDICATORS.some((word) => label.includes(word));
-}
-
-function isDogImage(predictions) {
-  if (!predictions || predictions.length === 0) return false;
-  const top = predictions[0];
-  return (
-    top.probability >= DOG_CONFIDENCE_THRESHOLD && isDogLabel(top.className)
+function isPetImage(predictions) {
+  return predictions.some(
+    (p) => PET_CLASSES.includes(p.class) && p.score >= PET_CONFIDENCE_THRESHOLD,
   );
 }
 
@@ -88,17 +26,17 @@ function Upload({ user, onPostUploaded }) {
   const imageRef = useRef();
   const modelRef = useRef(null);
 
-  // Lazy-load TensorFlow.js + MobileNet only when the user actually picks an
-  // image. Using dynamic import() code-splits this ~1.4MB of JS into its own
-  // chunk, so it's downloaded on first upload instead of bloating the initial
-  // Feed bundle. Cached in a ref so it loads at most once per session.
+  // Lazy-load TensorFlow.js + COCO-SSD only when the user picks an image.
+  // Dynamic import() code-splits this ML code into its own chunk so it's
+  // downloaded on first upload instead of bloating the initial Feed bundle.
+  // Cached in a ref so it loads at most once per session.
   const loadModel = async () => {
     if (modelRef.current) return modelRef.current;
     const tf = await import("@tensorflow/tfjs");
     await import("@tensorflow/tfjs-backend-webgl");
-    const mobilenet = await import("@tensorflow-models/mobilenet");
+    const cocoSsd = await import("@tensorflow-models/coco-ssd");
     await tf.ready();
-    modelRef.current = await mobilenet.load();
+    modelRef.current = await cocoSsd.load();
     return modelRef.current;
   };
 
@@ -118,10 +56,10 @@ function Upload({ user, onPostUploaded }) {
       img.onload = async () => {
         try {
           const model = await loadModel();
-          const predictions = await model.classify(img);
-          setValidationState(isDogImage(predictions) ? "valid" : "invalid");
+          const predictions = await model.detect(img);
+          setValidationState(isPetImage(predictions) ? "valid" : "invalid");
         } catch (err) {
-          console.error("Classification error:", err);
+          console.error("Detection error:", err);
           setValidationState("invalid");
         }
       };
@@ -163,7 +101,7 @@ function Upload({ user, onPostUploaded }) {
           {user.email?.charAt(0).toUpperCase()}
         </div>
         <label className="upload-file-label" htmlFor="file-input">
-          Share a dog moment…
+          Share a pet moment…
         </label>
       </div>
 
@@ -185,11 +123,13 @@ function Upload({ user, onPostUploaded }) {
         <p className="upload-status classifying">🔍 Analysing image…</p>
       )}
       {validationState === "invalid" && (
-        <p className="upload-status invalid">❌ Only dog images are allowed!</p>
+        <p className="upload-status invalid">
+          ❌ Only pet photos (dogs &amp; cats) are allowed!
+        </p>
       )}
       {validationState === "valid" && (
         <p className="upload-status valid">
-          ✅ Dog detected! Add a caption and post.
+          ✅ Pet detected! Add a caption and post.
         </p>
       )}
 
@@ -210,7 +150,7 @@ function Upload({ user, onPostUploaded }) {
 
       {error && <p className="upload-status invalid">{error}</p>}
 
-      {/* Hidden img for TensorFlow classification */}
+      {/* Hidden img used as the source for COCO-SSD detection */}
       <img
         ref={imageRef}
         style={{ display: "none" }}
