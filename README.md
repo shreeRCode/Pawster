@@ -111,11 +111,17 @@ erDiagram
 
 ## Screenshots
 
-| Landing | Feed |
-|:---:|:---:|
-| ![Landing page](docs/screenshots/landing.png) | ![Feed](docs/screenshots/feed.png) |
-| **Profile** | **AI upload filter** |
-| ![Profile](docs/screenshots/profile.png) | ![AI upload filter](docs/screenshots/upload.png) |
+**Landing**
+
+![Landing page](docs/screenshots/landing.png)
+
+**Login**
+
+![Login page](docs/screenshots/login.png)
+
+**Profile**
+
+![Profile page](docs/screenshots/profile.png)
 
 ## Getting Started
 
