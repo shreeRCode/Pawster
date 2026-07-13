@@ -1,4 +1,4 @@
-const BASE_API_URL = "https://pawster-pi.vercel.app";
+import { API_BASE_URL as BASE_API_URL } from "../config";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -15,10 +15,33 @@ const jsonHeaders = async (user) => ({
 
 // ─── Posts ───────────────────────────────────────────────────────────────────
 
-export const fetchPosts = async () => {
-  const res = await fetch(`${BASE_API_URL}/api/posts`);
+export const fetchPosts = async (page = 1, limit = 10) => {
+  const res = await fetch(
+    `${BASE_API_URL}/api/posts?page=${page}&limit=${limit}`,
+  );
   if (!res.ok) throw new Error("Failed to fetch posts");
+  return res.json(); // { posts, page, totalPages, hasMore }
+};
+
+export const deletePost = async (user, postId) => {
+  const res = await fetch(`${BASE_API_URL}/api/posts/${postId}`, {
+    method: "DELETE",
+    headers: await getAuthHeaders(user),
+  });
+  if (!res.ok) throw new Error("Failed to delete post");
   return res.json();
+};
+
+export const deleteComment = async (user, postId, commentId) => {
+  const res = await fetch(
+    `${BASE_API_URL}/api/posts/${postId}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      headers: await getAuthHeaders(user),
+    },
+  );
+  if (!res.ok) throw new Error("Failed to delete comment");
+  return res.json(); // updated comments array
 };
 
 export const createPost = async (user, formData) => {

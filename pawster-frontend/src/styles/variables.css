@@ -1,8 +1,11 @@
 :root {
-  --primary: #667eea;
-  --primary-dark: #5568d3;
-  --secondary: #764ba2;
-  --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-rgb: 99, 102, 241;
+  --secondary: #818cf8;
+  /* Flat accent (previously a two-tone gradient). To re-theme the whole app,
+     change --primary and --primary-rgb; everything else derives from them. */
+  --gradient: var(--primary);
 
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
@@ -22,7 +25,7 @@
   --bg: #f9fafb;
   --white: #ffffff;
   --border: #e5e7eb;
-  --link: #667eea;
+  --link: var(--primary);
 
   --success: #10b981;
   --success-light: #d1fae5;

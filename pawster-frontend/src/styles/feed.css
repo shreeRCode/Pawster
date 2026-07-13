@@ -93,7 +93,7 @@
 .upload-section input[type="text"]:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .upload-section button {
@@ -111,7 +111,7 @@
 
 .upload-section button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
 }
 
 .upload-section button:disabled {
@@ -274,6 +274,9 @@
   font-size: 24px;
   transition: transform var(--transition);
   padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text);
 }
 
 .post-action-btn:hover {
@@ -324,6 +327,10 @@
   font-size: 14px;
   color: var(--text-light);
   line-height: 1.5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
 }
 .comment strong {
   font-weight: 600;
@@ -468,7 +475,7 @@
 
 .follow-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 .follow-btn.following {
   background: var(--gray-100);
@@ -551,4 +558,81 @@
   .post-image img {
     max-height: 400px;
   }
+}
+
+/* ===== Post meta / delete / comments / load-more ===== */
+.post-time {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.post-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+  color: var(--text-muted);
+  transition: color var(--transition);
+  display: inline-flex;
+  align-items: center;
+}
+.post-delete-btn:hover:not(:disabled) {
+  color: var(--error);
+}
+.post-delete-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.comment-text {
+  min-width: 0;
+}
+
+.comment-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  opacity: 0;
+  display: inline-flex;
+  align-items: center;
+  transition:
+    opacity var(--transition),
+    color var(--transition);
+}
+.comment:hover .comment-delete-btn,
+.comment-delete-btn:focus-visible {
+  opacity: 1;
+}
+.comment-delete-btn:hover {
+  color: var(--error);
+}
+
+.load-more-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+.load-more-btn {
+  padding: 10px 24px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+  transition: all var(--transition);
+}
+.load-more-btn:hover:not(:disabled) {
+  background: var(--gray-50);
+  border-color: var(--primary);
+}
+.load-more-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

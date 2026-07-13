@@ -7,9 +7,8 @@ import {
   unfollowUser,
   updateProfile,
 } from "../services/api";
+import { API_BASE_URL as BASE_API_URL } from "../config";
 import "../styles/profile.css";
-
-const BASE_API_URL = "https://pawster-pi.vercel.app";
 
 // ─── Edit Modal ──────────────────────────────────────────────────────────────
 function EditModal({ profileData, onSave, onClose }) {

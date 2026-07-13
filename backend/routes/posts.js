@@ -35,18 +35,29 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage });
 
-//Get all Posts
+//Get all Posts (paginated)
 router.get("/", async (req, res) => {
   try {
-    const posts = await Post.find()
-      .populate("user", "username displayName profileImage")
-      .populate("comments.user", "username")
-      .sort({ createdAt: -1 });
-    await Post.populate(posts, {
-      path: "comments.user",
-      select: "username displayName profileImage",
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 50);
+    const skip = (page - 1) * limit;
+
+    const [posts, total] = await Promise.all([
+      Post.find()
+        .populate("user", "username displayName profileImage")
+        .populate("comments.user", "username displayName profileImage")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Post.countDocuments(),
+    ]);
+
+    res.json({
+      posts,
+      page,
+      totalPages: Math.ceil(total / limit),
+      hasMore: skip + posts.length < total,
     });
-    res.json(posts);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -117,6 +128,54 @@ router.post("/:id/comments", verifyToken, async (req, res) => {
       select: "username displayName profileImage",
     });
     res.status(201).json(post.comments); // return all comments
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE a post (author only)
+router.delete("/:id", verifyToken, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    if (!post.user.equals(req.user._id)) {
+      return res
+        .status(403)
+        .json({ error: "You can only delete your own posts" });
+    }
+
+    await post.deleteOne();
+    res.json({ message: "Post deleted", _id: req.params.id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// DELETE a comment (comment author or post owner)
+router.delete("/:id/comments/:commentId", verifyToken, async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ error: "Post not found" });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ error: "Comment not found" });
+
+    const isCommentAuthor = comment.user && comment.user.equals(req.user._id);
+    const isPostOwner = post.user.equals(req.user._id);
+    if (!isCommentAuthor && !isPostOwner) {
+      return res
+        .status(403)
+        .json({ error: "Not allowed to delete this comment" });
+    }
+
+    post.comments.pull(req.params.commentId);
+    await post.save();
+    await post.populate({
+      path: "comments.user",
+      select: "username displayName profileImage",
+    });
+    res.json(post.comments);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

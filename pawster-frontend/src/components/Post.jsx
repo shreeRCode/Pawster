@@ -1,17 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { likePost, addComment } from "../services/api";
+import { Heart, MessageCircle, Trash2, X } from "lucide-react";
+import {
+  likePost,
+  addComment,
+  deletePost,
+  deleteComment,
+} from "../services/api";
+import { API_BASE_URL as BASE_API_URL } from "../config";
+import { timeAgo } from "../utils/time";
 
-const BASE_API_URL = "https://pawster-pi.vercel.app";
-
-function Post({ post, user, currentUserMongoId, refreshPosts }) {
+function Post({ post, user, currentUserMongoId, onPostDeleted }) {
   const navigate = useNavigate();
   const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState(post.comments || []);
   const [likes, setLikes] = useState(post.likes || []);
   const [isLiked, setIsLiked] = useState(
     !!(currentUserMongoId && post.likes?.includes(currentUserMongoId)),
   );
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const commentInputRef = useRef(null);
 
   useEffect(() => {
@@ -21,10 +29,17 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
     );
   }, [post.likes, currentUserMongoId]);
 
+  useEffect(() => {
+    setComments(post.comments || []);
+  }, [post.comments]);
+
+  const postOwnerId = post.user?._id || post.user;
+  const isOwnPost = !!currentUserMongoId && postOwnerId === currentUserMongoId;
+
   const handleLike = async () => {
     if (!user || !currentUserMongoId) return;
 
-    // Optimistic update
+    // Optimistic update — no full-feed refetch needed.
     const newIsLiked = !isLiked;
     setIsLiked(newIsLiked);
     setLikes((prev) =>
@@ -35,7 +50,6 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
 
     try {
       await likePost(user, post._id);
-      refreshPosts();
     } catch {
       // Revert on error
       setIsLiked(!newIsLiked);
@@ -47,13 +61,35 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
     if (!commentText.trim() || submitting) return;
     setSubmitting(true);
     try {
-      await addComment(user, post._id, commentText);
+      const updated = await addComment(user, post._id, commentText);
+      setComments(updated);
       setCommentText("");
-      refreshPosts();
     } catch (err) {
       console.error("Comment error:", err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeletePost = async () => {
+    if (deleting) return;
+    if (!window.confirm("Delete this post? This cannot be undone.")) return;
+    setDeleting(true);
+    try {
+      await deletePost(user, post._id);
+      onPostDeleted?.(post._id);
+    } catch (err) {
+      console.error("Delete post error:", err);
+      setDeleting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const updated = await deleteComment(user, post._id, commentId);
+      setComments(updated);
+    } catch (err) {
+      console.error("Delete comment error:", err);
     }
   };
 
@@ -87,8 +123,23 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
             >
               {username}
             </span>
+            {post.createdAt && (
+              <span className="post-time">{timeAgo(post.createdAt)}</span>
+            )}
           </div>
         </div>
+
+        {isOwnPost && (
+          <button
+            className="post-delete-btn"
+            onClick={handleDeletePost}
+            disabled={deleting}
+            aria-label="Delete post"
+            title="Delete post"
+          >
+            <Trash2 size={18} />
+          </button>
+        )}
       </div>
 
       <div className="post-image">
@@ -101,14 +152,18 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
           className={`post-action-btn ${isLiked ? "liked" : ""}`}
           aria-label={isLiked ? "Unlike" : "Like"}
         >
-          {isLiked ? "❤️" : "🤍"}
+          <Heart
+            size={24}
+            fill={isLiked ? "#ef4444" : "none"}
+            color={isLiked ? "#ef4444" : "currentColor"}
+          />
         </button>
         <button
           className="post-action-btn"
           aria-label="Comment"
           onClick={() => commentInputRef.current?.focus()}
         >
-          💬
+          <MessageCircle size={24} />
         </button>
       </div>
 
@@ -123,13 +178,28 @@ function Post({ post, user, currentUserMongoId, refreshPosts }) {
           </div>
         )}
 
-        {post.comments?.length > 0 && (
+        {comments.length > 0 && (
           <div className="post-comments">
-            {post.comments.map((c) => {
+            {comments.map((c) => {
               if (!c?.user) return null;
+              const canDelete =
+                !!currentUserMongoId &&
+                (c.user._id === currentUserMongoId || isOwnPost);
               return (
                 <div key={c._id} className="comment">
-                  <strong>{c.user.username}</strong> {c.text}
+                  <span className="comment-text">
+                    <strong>{c.user.username}</strong> {c.text}
+                  </span>
+                  {canDelete && (
+                    <button
+                      className="comment-delete-btn"
+                      onClick={() => handleDeleteComment(c._id)}
+                      aria-label="Delete comment"
+                      title="Delete comment"
+                    >
+                      <X size={16} />
+                    </button>
+                  )}
                 </div>
               );
             })}

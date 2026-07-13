@@ -38,7 +38,7 @@
   color: white;
   font-size: 60px;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .profile-info {
@@ -76,7 +76,7 @@
 
 .follow-btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .follow-btn.following {
@@ -348,7 +348,7 @@
   outline: none;
   border-color: var(--primary);
   background: white;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
 .modal-actions {
@@ -382,12 +382,12 @@
   font-weight: 600;
   font-size: 14px;
   transition: all var(--transition-slow);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
 }
 
 .modal-btn-save:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 6px 18px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 18px rgba(var(--primary-rgb), 0.4);
 }
 .modal-btn-save:disabled {
   opacity: 0.5;
