@@ -111,13 +111,11 @@ erDiagram
 
 ## Screenshots
 
-> _Add screenshots to `docs/screenshots/` and reference them here._
-
-<!--
-![Landing](docs/screenshots/landing.png)
-![Feed](docs/screenshots/feed.png)
-![Profile](docs/screenshots/profile.png)
--->
+| Landing | Feed |
+|:---:|:---:|
+| ![Landing page](docs/screenshots/landing.png) | ![Feed](docs/screenshots/feed.png) |
+| **Profile** | **AI upload filter** |
+| ![Profile](docs/screenshots/profile.png) | ![AI upload filter](docs/screenshots/upload.png) |
 
 ## Getting Started
 
@@ -221,14 +219,6 @@ bundle chunk, so they are downloaded only the first time a user uploads.
 - **Backend** is deployed on Vercel as a serverless function (`backend/api/index.js`);
   its `vercel.json` routes all requests to the Express app.
 - Environment variables are configured in the Vercel dashboard for each project.
-
-## Roadmap
-
-- [ ] Cursor-based pagination + infinite scroll (currently offset "load more")
-- [ ] Direct messages / notifications
-- [ ] Distributed rate-limit store (Redis) for multi-instance deployments
-- [ ] Delete the Cloudinary image when a post is deleted
-- [ ] A dedicated `Pet` entity (breed, age) beyond the photo
 
 ## Author
 
